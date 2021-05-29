@@ -10,5 +10,5 @@
 1. `source bootstrap.sh`
 
 ## Linux Setup
-1. `cd ~ && mkdir Dev`
+1. `cd ~ && mkdir Dev && cd Dev`
 2. `git clone https://github.com/jamesbeldock/dotfiles.git && cd dotfiles && source bootstrap.sh`
