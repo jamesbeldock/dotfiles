@@ -9,3 +9,6 @@
 1. `source gems.sh` (requires `sudo` privileges)
 1. `source bootstrap.sh`
 
+## Linux Setup
+1. `cd ~ && mkdir Dev`
+2. `git clone https://github.com/jamesbeldock/dotfiles.git && cd dotfiles && source bootstrap.sh`
