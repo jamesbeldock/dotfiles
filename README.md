@@ -1,5 +1,5 @@
 # James's dotfiles
-(a working in progress based on [Mathias's dotfiles](https://github.com/mathiasbynens/dotfiles))
+(a work in progress based on [Mathias's dotfiles](https://github.com/mathiasbynens/dotfiles))
 
 ## New Mac Setup
 1. `xcode-select --install` (make sure Xcode CLI tools are installed)
