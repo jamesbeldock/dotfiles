@@ -104,5 +104,9 @@ brew install --cask font-hack-nerd-font
 brew cask install iterm2
 brew install zsh
 
+brew install ruby
+echo 'export PATH="/opt/homebrew/opt/ruby/bin:$PATH"' >> ~/.zshrc
+
+
 # Remove outdated versions from the cellar.
 brew cleanup
