@@ -4,6 +4,9 @@ cd "$(dirname "${BASH_SOURCE}")";
 
 git pull origin main;
 
+# install zinit
+bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
+
 function doIt() {
 	rsync --exclude ".git/" \
 		--exclude ".DS_Store" \
