@@ -100,7 +100,7 @@ brew install zopfli
 # some things James likes
 brew install bat
 brew tap homebrew/cask-fonts
-brew install --cask font-hack-nerd-font
+brew install font-jetbrains-mono-nerd-font
 brew cask install iterm2
 brew install zsh
 
