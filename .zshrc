@@ -77,7 +77,7 @@ export ZSH="$HOME/.oh-my-zsh"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git)
+plugins=(z git docker docker-compose extract sudo colored-man-pages fzf)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -125,6 +125,13 @@ autoload -Uz _zinit
 ### End of Zinit's installer chunk
 zinit ice depth"1"
 zinit light romkatv/powerlevel10k
+zinit light zsh-users/zsh-autosuggestions
+zinit light zsh-users/zsh-syntax-highlighting
+zinit ice depth"1"
+zinit light agpenton/1password-zsh-plugin
+zinit ice depth"1"
+zinit light junegunn/fzf
+
 
 export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
 
