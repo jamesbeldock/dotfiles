@@ -23,8 +23,8 @@ brew install findutils
 # Install GNU `sed`, overwriting the built-in `sed`.
 brew install gnu-sed --with-default-names
 # Install a modern version of Bash.
-brew install bash
-brew install bash-completion2
+ brew install bash
+ brew install bash-completion2
 
 # Switch to using brew-installed bash as default shell
 #if ! fgrep -q "${BREW_PREFIX}/bin/bash" /etc/shells; then
@@ -46,45 +46,22 @@ brew install screen
 brew install php
 brew install gmp
 
-# Install font tools.
-brew tap bramstein/webfonttools
-brew install sfnt2woff
-brew install sfnt2woff-zopfli
-brew install woff2
-
-# Install some CTF tools; see https://github.com/ctfs/write-ups.
-#brew install aircrack-ng
-#brew install bfg
-#brew install binutils
-#brew install binwalk
-#brew install cifer
-#brew install dex2jar
 brew install dns2tcp
-#brew install fcrackzip
-#brew install foremost
-#brew install hashpump
-#brew install hydra
-#brew install john
 brew install knock
 brew install netpbm
 brew install nmap
 brew install pngcheck
 brew install socat
 brew install sqlmap
-#brew install tcpflow
-#brew install tcpreplay
 brew install tcptrace
-#brew install ucspi-tcp # `tcpserver` etc.
 brew install xpdf
 brew install xz
 
 # Install other useful binaries.
 brew install ack
-#brew install exiv2
 brew install git
 brew install git-lfs
 brew install gs
-#brew install imagemagick --with-webp
 brew install lua
 brew install lynx
 brew install p7zip
@@ -103,10 +80,23 @@ brew tap homebrew/cask-fonts
 brew install font-jetbrains-mono-nerd-font
 brew cask install iterm2
 brew install zsh
+brew install fzf
+brew install luarocks
+brew install gh
+brew install pandoc
+brew install ripgrep
+brew install tmux
+brew install mosh
+brew install atuin
+brew install eza
+brew install fd
+brew install python3
+
+
+
 
 brew install ruby
 echo 'export PATH="/opt/homebrew/opt/ruby/bin:$PATH"' >> ~/.zshrc
-
 
 # Remove outdated versions from the cellar.
 brew cleanup
