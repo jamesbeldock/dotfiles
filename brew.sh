@@ -104,6 +104,7 @@ brew install tpm
 
 
 
+
 brew install ruby
 echo 'export PATH="/opt/homebrew/opt/ruby/bin:$PATH"' >> ~/.zshrc
 
