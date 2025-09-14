@@ -134,6 +134,8 @@ zinit light junegunn/fzf
 
 
 export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
+export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
+
 
 source "$HOME/.aliases"
 source "$HOME/.exports"
