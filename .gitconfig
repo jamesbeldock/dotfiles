@@ -135,6 +135,7 @@
 [delta]
     navigate = true
 	dark = true
+	side-by-side = true
 
 [diff]
 
