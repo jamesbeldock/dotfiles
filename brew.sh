@@ -98,6 +98,8 @@ brew install git-delta
 brew install uv
 brew install thefuck
 brew install mtr
+brew install htop
+brew install tpm
 
 
 
