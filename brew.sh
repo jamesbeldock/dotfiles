@@ -91,6 +91,13 @@ brew install atuin
 brew install eza
 brew install fd
 brew install python3
+brew install neovim
+brew install broot
+brew install bottom
+brew install git-delta
+brew install uv
+brew install thefuck
+brew install mtr
 
 
 
