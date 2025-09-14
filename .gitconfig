@@ -195,6 +195,7 @@
 [init]
 
 	defaultBranch = main
+	
 [user]
 	email = james@xecuteventures.com
 	name = James Beldock
