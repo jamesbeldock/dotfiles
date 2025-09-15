@@ -100,6 +100,8 @@ brew install thefuck
 brew install mtr
 brew install htop
 brew install tpm
+brew install yazi
+brew install stow
 
 brew install ruby
 echo 'export PATH="/opt/homebrew/opt/ruby/bin:$PATH"' >> ~/.zshrc
