@@ -131,7 +131,6 @@ zinit ice depth"1"
 zinit light agpenton/1password-zsh-plugin
 zinit ice depth"1"
 zinit light junegunn/fzf
-zinit light atuinsh/atuin
 
 
 export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
@@ -144,6 +143,7 @@ source "$HOME/.functions"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
 
-# zoxide
-eval "$(zoxide init zsh)"
+# atuin
+eval "$(atuin init zsh)"
