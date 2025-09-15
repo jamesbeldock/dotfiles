@@ -131,6 +131,7 @@ zinit ice depth"1"
 zinit light agpenton/1password-zsh-plugin
 zinit ice depth"1"
 zinit light junegunn/fzf
+zinit light atuinsh/atuin
 
 
 export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
