@@ -110,6 +110,8 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
+source "$HOME/.aliases"
+
 ### Added by Zinit's installer
 if [[ ! -f $HOME/.local/share/zinit/zinit.git/zinit.zsh ]]; then
     print -P "%F{33} %F{220}Installing %F{33}ZDHARMA-CONTINUUM%F{220} Initiative Plugin Manager (%F{33}zdharma-continuum/zinit%F{220})…%f"
@@ -132,12 +134,11 @@ zinit light agpenton/1password-zsh-plugin
 zinit ice depth"1"
 zinit light junegunn/fzf
 
-
 export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
 export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
 export PATH="$PATH:/opt/homebrew/sbin"
 
-source "$HOME/.aliases"
+
 source "$HOME/.exports"
 source "$HOME/.functions"
 
@@ -147,3 +148,7 @@ export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
 
 # atuin
 eval "$(atuin init zsh)"
+
+# iterm2 shell integration, with tmux support (see https://gitlab.com/gnachman/iterm2/-/wikis/tmux-Integration-Best-Practices)
+export ITERM_ENABLE_SHELL_INTEGRATION_WITH_TMUX=YES
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
