@@ -134,11 +134,12 @@ zinit light agpenton/1password-zsh-plugin
 zinit ice depth"1"
 zinit light junegunn/fzf
 
+
 export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
 export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
 export PATH="$PATH:/opt/homebrew/sbin"
 
-
+source "$HOME/.aliases"
 source "$HOME/.exports"
 source "$HOME/.functions"
 
@@ -152,3 +153,4 @@ eval "$(atuin init zsh)"
 # iterm2 shell integration, with tmux support (see https://gitlab.com/gnachman/iterm2/-/wikis/tmux-Integration-Best-Practices)
 export ITERM_ENABLE_SHELL_INTEGRATION_WITH_TMUX=YES
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+
