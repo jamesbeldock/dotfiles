@@ -102,6 +102,7 @@ brew install htop
 brew install tpm
 brew install yazi
 brew install stow
+brew install --cask font-fira-code-nerd-font
 
 brew install ruby
 echo 'export PATH="/opt/homebrew/opt/ruby/bin:$PATH"' >> ~/.zshrc
