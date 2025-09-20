@@ -28,3 +28,5 @@ else
 	fi;
 fi;
 unset doIt;
+
+ln -s ~/code/dotfiles/config/tokyonight.yml ~/.eza/theme.yml
