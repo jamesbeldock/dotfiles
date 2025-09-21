@@ -13,6 +13,7 @@ PACKAGE=(
 	"git"
 	"iterm2"
 	"nvim"
+	"oh-my-zsh"
 	"tmux"
 	"wezterm"
 	"zsh"
