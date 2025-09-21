@@ -1,3 +1,8 @@
+export PATH="/opt/homebrew/bin:$PATH" # use homebrew-installed binaries first
+
+# start in tmux if not already inside tmux
+if [ "$TMUX" = "" ]; then tmux; fi
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
