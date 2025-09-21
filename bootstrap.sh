@@ -1,32 +1,18 @@
-#!/usr/bin/env bash
+#!bin/bash
 
-cd "$(dirname "${BASH_SOURCE}")";
+# Run this script first of all. It will run the others.
 
-git pull origin main;
+source ./shell.sh
+if [[ "$OSTYPE" == "darwin"* ]]; then
+	source ./brew.sh
+fi
 
-# install zinit
-bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
+stow -v -t ~/ --dotfiles basic
+stow -v -t ~/ --dotfiles "config resources"
 
-function doIt() {
-	rsync --exclude ".git/" \
-		--exclude ".DS_Store" \
-		--exclude ".osx" \
-		--exclude "bootstrap.sh" \
-		--exclude "README.md" \
-		--exclude "LICENSE-MIT.txt" \
-		-avh --no-perms . ~;
-	# source ~/.bash_profile;
-}
+zinit ice as"command" from"gh-r" bpick"atuin-*.tar.gz" mv"atuin*/atuin -> atuin" \
+    atclone"./atuin init zsh > init.zsh; ./atuin gen-completions --shell zsh > _atuin" \
+    atpull"%atclone" src"init.zsh"
+zinit light atuinsh/atuin
 
-if [ "$1" == "--force" -o "$1" == "-f" ]; then
-	doIt;
-else
-	read -p "This may overwrite existing files in your home directory. Are you sure? (y/n) " -n 1;
-	echo "";
-	if [[ $REPLY =~ ^[Yy]$ ]]; then
-		doIt;
-	fi;
-fi;
-unset doIt;
-
-ln -s ~/code/dotfiles/config/tokyonight.yml ~/.eza/theme.yml
+ln -s ~/.config/resources/tokyonight.yml ~/.eza/theme.yml
