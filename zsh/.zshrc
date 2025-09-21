@@ -143,7 +143,8 @@ source "$HOME/.functions"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
+
+export PATH="/opt/homebrew/bin:/opt/homebrew/bin/bash:/opt/homebrew/opt/ruby/bin:$PATH"
 
 # atuin
 eval "$(atuin init zsh)"

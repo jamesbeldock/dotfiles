@@ -32,3 +32,8 @@ stow -v -t ~/ --dotfiles atuin
 
 # install eza theme
 ln -s ~/.config/resources/tokyonight.yml ~/.eza/theme.yml
+
+# set up TPM (tmux plugin manager)
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+git clone https://github.com/2KAbhishek/tmux2k.git ~/.tmux/plugins/tmux2k
+
