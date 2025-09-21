@@ -7,12 +7,27 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 	source ./brew.sh
 fi
 
-stow -v -t ~/ --dotfiles basic
-stow -v -t ~/ --dotfiles "config resources"
+PACKAGE=(
+	"basic"
+	"config resources"
+	"git"
+	"iterm2"
+	"nvim"
+	"tmux"
+	"wezterm"
+	"zsh"
+)
 
+for package in "${PACKAGE[@]}"; do
+	stow -v -t ~/ --dotfiles "$package"
+done
+
+#atuin installation and stow package
 zinit ice as"command" from"gh-r" bpick"atuin-*.tar.gz" mv"atuin*/atuin -> atuin" \
     atclone"./atuin init zsh > init.zsh; ./atuin gen-completions --shell zsh > _atuin" \
     atpull"%atclone" src"init.zsh"
 zinit light atuinsh/atuin
+stow -v -t ~/ --dotfiles atuin
 
+# install eza theme
 ln -s ~/.config/resources/tokyonight.yml ~/.eza/theme.yml
