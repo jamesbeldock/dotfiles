@@ -2,9 +2,9 @@
 # this hasn't been debugged yet; don't trust this to work
 echo "WARNING: This script hasn't been debugged yet; don't trust this to work"
 
-sudo apt-get update
+sudo apt-get install -y  update
 
-sudo apt-get upgrade
+sudo apt-get install -y  upgrade
 
 GNU_CORE_UTILS=(
     "coreutils"
@@ -19,7 +19,7 @@ GNU_CORE_UTILS=(
 
 for package in "${GNU_CORE_UTILS[@]}"; do
     if ! apt list --installed | grep -q "^$package$"; then
-        sudo apt-get install "$package"
+        sudo apt-get install -y  install "$package"
     fi
 done
 
@@ -35,7 +35,7 @@ BASIC_TOOLS=(
 
 for package in "${BASIC_TOOLS[@]}"; do
     if ! apt list --installed | grep -q "^$package$"; then
-         sudo apt-get install "$package"
+         sudo apt-get install -y  install "$package"
     fi
 done
 
@@ -55,7 +55,7 @@ NETWORK_SECURITY_TOOLS=(
 
 for package in "${NETWORK_SECURITY_TOOLS[@]}"; do
         if ! apt list --installed | grep -q "^$package$"; then
-            sudo apt-get install "$package"
+            sudo apt-get install -y  install "$package"
         fi
 done
 
@@ -80,7 +80,7 @@ GENERAL_UTILITIES=(
 
 for package in "${GENERAL_UTILITIES[@]}"; do
    if ! apt list --installed | grep -q "^$package$"; then
-       sudo apt-get install "$package"
+       sudo apt-get install -y  install "$package"
    fi
 done
 
@@ -115,7 +115,7 @@ JAMES_TOOLS=(
 
 for package in "${JAMES_TOOLS[@]}"; do
     if ! apt list --installed | grep -q "^$package$"; then
-        sudo apt-get install "$package"
+        sudo apt-get install -y "$package"
     fi
 done
 
@@ -127,9 +127,9 @@ NERD_FONTS=(
 
 for font in "${NERD_FONTS[@]}"; do
     if ! apt list --installed | grep -q "^$font$"; then
-        sudo apt-get install "$font"
+        sudo apt-get install -y  install "$font"
     fi
 done
 
 # Remove outdated versions from the cellar.
-sudo apt-get autoremove
+sudo apt-get install -y  autoremove

@@ -2,7 +2,7 @@
 
 # Run this script first of all. It will run the others.
 
-source ./shell.sh
+source ./shell.sh		#TODO: fix this for Linux
 if [[ "$OSTYPE" == "darwin"* ]]; then
 	source ./brew.sh
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
