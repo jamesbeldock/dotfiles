@@ -22,6 +22,7 @@ GNU_CORE_UTILS=(
     "bash-completion2"
     "wget"
     "gnu-sed"
+    "stow"
 )
 
 for package in "${GNU_CORE_UTILS[@]}"; do

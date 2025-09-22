@@ -14,5 +14,7 @@
 9. `source dotfiles/bootstrap.sh`
 
 ## Linux Setup
-1. `cd ~ && mkdir Dev && cd Dev`
-2. `git clone https://github.com/jamesbeldock/dotfiles.git && cd dotfiles && source bootstrap.sh`
+1. `cd ~ && mkdir code && cd code`
+2. install Git and command line: `sudo apt install git gh` 
+3. grab the repo: `git clone https://github.com/jamesbeldock/dotfiles.git`
+4. start it up: `cd dotfiles && source bootstrap.sh`

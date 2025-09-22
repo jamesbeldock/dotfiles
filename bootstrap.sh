@@ -5,6 +5,8 @@
 source ./shell.sh
 if [[ "$OSTYPE" == "darwin"* ]]; then
 	source ./brew.sh
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+	source ./linux-apt-package-install.sh
 fi
 
 PACKAGE=(
