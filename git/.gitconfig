@@ -195,7 +195,18 @@
 [init]
 
 	defaultBranch = main
-	
+
 [user]
 	email = james@xecuteventures.com
 	name = James Beldock
+  signingkey = ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDl6XdxPR8WBLidgDbCrgS953q9nP44W+XpGrSF1Dnc5ppQT0e+pyWxIkQ8HdGsAQGirh6NvowG9fmTHPW0i2ALy0AefuWJzl44IMUp64cN+ZG4t35dQx0JYhpL9lNMuz5wwDOVchKLK9mpbFumg+qETLnnO0IQ8Cmx/uL/u3XR/+PT68AqFbXCGJc2bUnoo8uNDRdShIV48SbXSSPNKQLDYtmnsKoxQImmRipTUzjWN+kU8KCb8Dnwwosc0tU4J4iG3p4HweJU0ljlspQkSAl62tNs5EgF+RPZyNF7I7993wZKBUHK+stPTpJCzhDfwrMgZiecLo0GR1m5nNuq/Yl/
+
+[gpg]
+  format = ssh
+
+[gpg "ssh"]
+  program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+
+[commit]
+  gpgsign = true
+
