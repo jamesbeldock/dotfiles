@@ -102,6 +102,7 @@ done
 
 # James's preferred development tools
 JAMES_TOOLS=(
+    "starship"
     "bat"
     "zsh"
     "fzf"
