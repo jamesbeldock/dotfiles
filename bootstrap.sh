@@ -1,10 +1,11 @@
-#!bin/bash
+set -x	# debugging on
+pwd
 
 # Run this script first of all. It will run the others.
 
 source ./shell.sh		#TODO: fix this for Linux
 if [[ "$OSTYPE" == "darwin"* ]]; then
-	source ./brew.sh
+	source ./osx-package-install.sh
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
 	source ./linux-apt-package-install.sh
 fi
@@ -38,4 +39,3 @@ ln -s ~/.config/resources/tokyonight.yml ~/.eza/theme.yml
 # set up TPM (tmux plugin manager)
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 git clone https://github.com/2KAbhishek/tmux2k.git ~/.tmux/plugins/tmux2k
-

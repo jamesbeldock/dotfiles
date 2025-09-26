@@ -1,4 +1,6 @@
 export PATH="/opt/homebrew/bin:$PATH" # use homebrew-installed binaries first
+export HOMEBREW_NO_ENV_HINTS=1
+
 
 # start in tmux if not already inside tmux
 if [ "$TMUX" = "" ]; then tmux; fi
@@ -152,9 +154,9 @@ source "$HOME/.functions"
 export PATH="/opt/homebrew/bin:/opt/homebrew/bin/bash:/opt/homebrew/opt/ruby/bin:$PATH"
 
 # atuin
-eval "$(atuin init zsh)"
+# eval "$(atuin init zsh)"
 
 # iterm2 shell integration, with tmux support (see https://gitlab.com/gnachman/iterm2/-/wikis/tmux-Integration-Best-Practices)
 export ITERM_ENABLE_SHELL_INTEGRATION_WITH_TMUX=YES
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
-
+export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
