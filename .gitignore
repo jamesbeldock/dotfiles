@@ -13,3 +13,4 @@ Thumbs.db
 .Spotlight-V100
 .Trashes
 git/.gitconfig
+nvim/.config/nvim/lazy-lock.json
