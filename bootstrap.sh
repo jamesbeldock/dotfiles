@@ -17,6 +17,7 @@ PACKAGE=(
 	"iterm2"
 	"nvim"
 	"oh-my-zsh"
+	"starship"
 	"tmux"
 	"wezterm"
 	"zsh"
