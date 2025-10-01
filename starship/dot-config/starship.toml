@@ -1,30 +1,17 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
 format = """
-[](color_orange)\
+[](bg:color_bg2 fg:color_10k_lightgray)\
 $os\
 $username\
-[](bg:color_yellow fg:color_orange)\
+[](bg:color_10k_blue fg:color_10k_lightgray)\
 $directory\
-[](fg:color_yellow bg:color_aqua)\
+[](fg:color_10k_blue bg:color_aqua)\
 $git_branch\
 $git_status\
-[](fg:color_aqua bg:color_blue)\
-$c\
-$cpp\
-$rust\
-$golang\
-$nodejs\
-$php\
-$java\
-$kotlin\
-$haskell\
-$python\
-[](fg:color_blue bg:color_bg3)\
-$docker_context\
-$conda\
-$pixi\
-[](fg:color_bg3 bg:color_bg1)\
+[](fg:color_aqua bg:color_bg2)\
+$fill\
+[](fg:color_bg1 bg:color_bg2)\
 $time\
 [ ](fg:color_bg1)\
 $line_break$character"""
@@ -34,7 +21,12 @@ palette = 'gruvbox_dark'
 [palettes.gruvbox_dark]
 color_fg0 = '#fbf1c7'
 color_bg1 = '#3c3836'
+color_bg2 = '#282c34'
 color_bg3 = '#665c54'
+color_10k_darkgray = '#303030'
+color_10k_medgray = '#454545'
+color_10k_lightgray = '#606060'
+color_10k_blue = '#4c74b9'
 color_blue = '#458588'
 color_aqua = '#689d6a'
 color_green = '#98971a'
@@ -45,7 +37,7 @@ color_yellow = '#d79921'
 
 [os]
 disabled = false
-style = "bg:color_orange fg:color_fg0"
+style = "bg:color_10k_lightgray fg:color_fg0"
 
 [os.symbols]
 Windows = "󰍲"
@@ -70,14 +62,18 @@ Redhat = "󱄛"
 RedHatEnterprise = "󱄛"
 Pop = ""
 
+[fill]
+symbol = "·"
+style = "fg:color_bg3"
+
 [username]
 show_always = true
-style_user = "bg:color_orange fg:color_fg0"
-style_root = "bg:color_orange fg:color_fg0"
+style_user = "bg:color_10k_lightgray fg:color_fg0"
+style_root = "bg:color_red fg:color_fg0"
 format = '[ $user ]($style)'
 
 [directory]
-style = "fg:color_fg0 bg:color_yellow"
+style = "fg:color_fg0 bg:color_10k_blue"
 format = "[ $path ]($style)"
 truncation_length = 3
 truncation_symbol = "…/"
@@ -178,5 +174,3 @@ vimcmd_symbol = '[](bold fg:color_green)'
 vimcmd_replace_one_symbol = '[](bold fg:color_purple)'
 vimcmd_replace_symbol = '[](bold fg:color_purple)'
 vimcmd_visual_symbol = '[](bold fg:color_yellow)'
-
-
