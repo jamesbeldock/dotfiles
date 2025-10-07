@@ -129,6 +129,8 @@ zinit ice depth"1"
 zinit light agpenton/1password-zsh-plugin
 zinit ice depth"1"
 zinit light junegunn/fzf
+zinit ice blockf
+zinit light zsh-users/zsh-completions
 
 
 export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
