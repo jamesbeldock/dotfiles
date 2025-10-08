@@ -15,3 +15,7 @@ Thumbs.db
 git/.gitconfig
 nvim/.config/nvim/lazy-lock.json
 karabiner/dot-config/karabiner/automatic_backups/*
+iterm2/.config/iterm2
+iterm2/.config/*
+iterm2/.config/iterm2/AppSupport
+
