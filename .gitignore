@@ -12,12 +12,12 @@ Thumbs.db
 # Files that might appear on external disks
 .Spotlight-V100
 .Trashes
+
+# other
 git/.gitconfig
 nvim/.config/nvim/lazy-lock.json
 karabiner/dot-config/karabiner/automatic_backups/*
-iterm2/.config/iterm2
-iterm2/.config/*
-iterm2/.config/iterm2/AppSupport
+iterm2/dot-config/iterm2*
 iterm2/dot-config/*
 
 iterm2/.config/iterm2/AppSupport
