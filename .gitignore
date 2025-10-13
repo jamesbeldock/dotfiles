@@ -18,4 +18,6 @@ karabiner/dot-config/karabiner/automatic_backups/*
 iterm2/.config/iterm2
 iterm2/.config/*
 iterm2/.config/iterm2/AppSupport
+iterm2/dot-config/*
 
+iterm2/.config/iterm2/AppSupport
