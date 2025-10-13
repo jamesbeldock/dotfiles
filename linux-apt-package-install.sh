@@ -111,6 +111,7 @@ JAMES_TOOLS=(
     "yazi"
     "stow"
     "ruby"
+    "fastfetch"
 )
 
 for package in "${JAMES_TOOLS[@]}"; do
