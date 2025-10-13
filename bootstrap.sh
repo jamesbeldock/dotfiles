@@ -10,22 +10,7 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
 	source ./linux-apt-package-install.sh
 fi
 
-PACKAGE=(
-	"basic"
-	"config resources"
-	"git"
-	"iterm2"
-	"nvim"
-	"oh-my-zsh"
-	"starship"
-	"tmux"
-	"wezterm"
-	"zsh"
-)
-
-for package in "${PACKAGE[@]}"; do
-	stow -v -t ~/ --dotfiles "$package"
-done
+source ./stow-packages.sh
 
 #atuin installation and stow package
 zinit ice as"command" from"gh-r" bpick"atuin-*.tar.gz" mv"atuin*/atuin -> atuin" \
