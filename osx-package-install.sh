@@ -128,6 +128,7 @@ JAMES_TOOLS=(
     "yazi"
     "stow"
     "ruby"
+    "tldr"
     "fastfetch"
 )
 
