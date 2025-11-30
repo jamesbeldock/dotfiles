@@ -80,3 +80,4 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 eval "$(starship init zsh)"
 
 fastfetch
+export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
