@@ -72,7 +72,9 @@ NETWORK_SECURITY_TOOLS=(
 )
 
 for package in "${NETWORK_SECURITY_TOOLS[@]}"; do
-    brew install "$package"
+    if ! brew list --formula | grep -q "^$package$"; then
+        brew install "$package"
+    fi
 done
 
 # Install other useful binaries.
