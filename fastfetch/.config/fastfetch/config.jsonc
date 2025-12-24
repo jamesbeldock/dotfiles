@@ -5,19 +5,18 @@
     "separator",
     "os",
     "host",
-    "kernel",
     "uptime",
     "packages",
     "shell",
-    "wm",
     "icons",
     "terminal",
+    "terminalfont",
     "cpu",
     "gpu",
     "memory",
-    "swap",
     "disk",
     "localip",
-    "break"
+    "break",
+    "colors"
   ]
 }
