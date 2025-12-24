@@ -114,19 +114,22 @@ CASK_APPS=(
 
 # Input parsing
 if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ -z "$1" ] ; then
-    echo "Usage: osx-package-install.sh [--help|-h] server|workstation"
-    echo "  server:      Core utils, Basic tools, Network/Security, General utils, and James's tools"
+    echo "Usage: osx-package-install.sh [--help|-h] server|workstation|iot"
+    echo "  iot:         Core utils, Basic tools, and James's tools"
+    echo "  server:      IoT + Network/Security tools + General utilities"
     echo "  workstation: Server + Fonts + Cask apps"
-    echo "  (IoT profile is not supported on macOS)"
+    exit 0
+elif [ "$1" = "iot" ]; then
+    echo "IoT profile is not applicable on macOS. Skipping package installation."
     exit 0
 elif [ "$1" = "server" ]; then
     MODE="server"
     FORMULAE_TO_INSTALL=(
         "${GNU_CORE_UTILS[@]}"
         "${BASIC_TOOLS[@]}"
+        "${JAMES_TOOLS[@]}"
         "${NETWORK_SECURITY_TOOLS[@]}"
         "${GENERAL_UTILITIES[@]}"
-        "${JAMES_TOOLS[@]}"
     )
     CASKS_TO_INSTALL=()
 elif [ "$1" = "workstation" ]; then
@@ -134,16 +137,16 @@ elif [ "$1" = "workstation" ]; then
     FORMULAE_TO_INSTALL=(
         "${GNU_CORE_UTILS[@]}"
         "${BASIC_TOOLS[@]}"
+        "${JAMES_TOOLS[@]}"
         "${NETWORK_SECURITY_TOOLS[@]}"
         "${GENERAL_UTILITIES[@]}"
-        "${JAMES_TOOLS[@]}"
     )
     CASKS_TO_INSTALL=(
         "${NERD_FONTS[@]}"
         "${CASK_APPS[@]}"
     )
 else
-    echo "Invalid or unsupported option: $1"
+    echo "Invalid option: $1"
     exit 1
 fi
 
