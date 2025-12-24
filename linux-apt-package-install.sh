@@ -2,10 +2,6 @@
 # this hasn't been debugged yet; don't trust this to work
 echo "WARNING: This script hasn't been debugged yet; don't trust this to work"
 
-sudo apt-get install -y  update
-
-sudo apt-get install -y  upgrade
-
 GNU_CORE_UTILS=(
     "coreutils"
     "moreutils"  # Install some other useful utilities like `sponge`
@@ -17,12 +13,6 @@ GNU_CORE_UTILS=(
     "stow"
 )
 
-for package in "${GNU_CORE_UTILS[@]}"; do
-    if ! apt list --installed | grep -q "^$package$"; then
-        sudo apt-get install -y  install "$package"
-    fi
-done
-
 BASIC_TOOLS=(
     "grep"
     "openssh"
@@ -32,12 +22,6 @@ BASIC_TOOLS=(
     "vim"
     "gnupg"
 )
-
-for package in "${BASIC_TOOLS[@]}"; do
-    if ! apt list --installed | grep -q "^$package$"; then
-         sudo apt-get install -y  install "$package"
-    fi
-done
 
 # Network and security tools
 NETWORK_SECURITY_TOOLS=(
@@ -52,12 +36,6 @@ NETWORK_SECURITY_TOOLS=(
     "xpdf"
     "xz"
 )
-
-for package in "${NETWORK_SECURITY_TOOLS[@]}"; do
-        if ! apt list --installed | grep -q "^$package$"; then
-            sudo apt-get install -y  install "$package"
-        fi
-done
 
 # Install other useful binaries.
 GENERAL_UTILITIES=(
@@ -77,12 +55,6 @@ GENERAL_UTILITIES=(
     "vbindiff"
     "zopfli"
 )
-
-for package in "${GENERAL_UTILITIES[@]}"; do
-   if ! apt list --installed | grep -q "^$package$"; then
-       sudo apt-get install -y  install "$package"
-   fi
-done
 
 # James's preferred development tools
 JAMES_TOOLS=(
@@ -115,23 +87,62 @@ JAMES_TOOLS=(
     "fastfetch"
 )
 
-for package in "${JAMES_TOOLS[@]}"; do
-    if ! apt list --installed | grep -q "^$package$"; then
-        sudo apt-get install -y "$package"
-    fi
-done
-
 # Font installations
 NERD_FONTS=(
     "font-jetbrains-mono-nerd-font"
     "font-fira-code-nerd-font"
 )
 
-for font in "${NERD_FONTS[@]}"; do
-    if ! apt list --installed | grep -q "^$font$"; then
-        sudo apt-get install -y  install "$font"
+# Input parsing
+if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ -z "$1" ] ; then
+    echo "Usage: linux-apt-package-install.sh [--help|-h] server|workstation|iot"
+    echo "  iot:         Basic tools, Core utils, and James's tools (tmux, zsh, etc.)"
+    echo "  server:      IoT + Network/Security tools + General utilities (git, etc.)"
+    echo "  workstation: Server + Fonts"
+    exit 0
+elif [ "$1" = "iot" ]; then
+    MODE="iot"
+    PACKAGES_TO_INSTALL=(
+        "${GNU_CORE_UTILS[@]}"
+        "${BASIC_TOOLS[@]}"
+        "${JAMES_TOOLS[@]}"
+    )
+elif [ "$1" = "server" ]; then
+    MODE="server"
+    PACKAGES_TO_INSTALL=(
+        "${GNU_CORE_UTILS[@]}"
+        "${BASIC_TOOLS[@]}"
+        "${JAMES_TOOLS[@]}"
+        "${NETWORK_SECURITY_TOOLS[@]}"
+        "${GENERAL_UTILITIES[@]}"
+    )
+elif [ "$1" = "workstation" ]; then
+    MODE="workstation"
+    PACKAGES_TO_INSTALL=(
+        "${GNU_CORE_UTILS[@]}"
+        "${BASIC_TOOLS[@]}"
+        "${JAMES_TOOLS[@]}"
+        "${NETWORK_SECURITY_TOOLS[@]}"
+        "${GENERAL_UTILITIES[@]}"
+        "${NERD_FONTS[@]}"
+    )
+else
+    echo "Invalid option: $1"
+    exit 1
+fi
+
+echo "Installing packages for $MODE mode..."
+
+sudo apt-get update
+sudo apt-get upgrade -y
+
+for package in "${PACKAGES_TO_INSTALL[@]}"; do
+    if ! apt list --installed 2>/dev/null | grep -q "^${package}/"; then
+        sudo apt-get install -y "$package"
+    else
+        echo "$package is already installed."
     fi
 done
 
 # Remove outdated versions from the cellar.
-sudo apt-get install -y  autoremove
+sudo apt-get autoremove -y

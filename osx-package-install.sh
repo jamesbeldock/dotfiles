@@ -25,23 +25,8 @@ GNU_CORE_UTILS=(
     "stow"
 )
 
-for package in "${GNU_CORE_UTILS[@]}"; do
-    if ! brew list --formula | grep -q "^$package$"; then
-        brew install "$package"
-    fi
-done
-
-# Create symlink for sha256sum
-ln -s "${BREW_PREFIX}/bin/gsha256sum" "${BREW_PREFIX}/bin/sha256sum"
-
-# Switch to using brew-installed zsh as default shell
-if ! fgrep -q "${BREW_PREFIX}/bin/zsh" /etc/shells; then
-  echo "${BREW_PREFIX}/bin/zsh" | sudo tee -a /etc/shells;
-  chsh -s "${BREW_PREFIX}/bin/zsh";
-fi;
-
 # Install more recent versions of some macOS tools.
-MACOS_TOOLS=(
+BASIC_TOOLS=(
     "grep"
     "openssh"
     "screen"
@@ -50,12 +35,6 @@ MACOS_TOOLS=(
     "vim"
     "gnupg"
 )
-
-for package in "${MACOS_TOOLS[@]}"; do
-    if ! brew list --formula | grep -q "^$package$"; then
-         brew install "$package"
-    fi
-done
 
 # Network and security tools
 NETWORK_SECURITY_TOOLS=(
@@ -70,10 +49,6 @@ NETWORK_SECURITY_TOOLS=(
     "xpdf"
     "xz"
 )
-
-for package in "${NETWORK_SECURITY_TOOLS[@]}"; do
-    brew install "$package"
-done
 
 # Install other useful binaries.
 GENERAL_UTILITIES=(
@@ -94,13 +69,7 @@ GENERAL_UTILITIES=(
     "zopfli"
 )
 
-for package in "${GENERAL_UTILITIES[@]}"; do
-   if ! brew list --formula | grep -q "^$package$"; then
-       brew install "$package"
-   fi
-done
-
-# James's preferred development tools
+# James's preferred tools
 JAMES_TOOLS=(
     "starship"
     "bat"
@@ -132,34 +101,81 @@ JAMES_TOOLS=(
     "fastfetch"
 )
 
-for package in "${JAMES_TOOLS[@]}"; do
-    if ! brew list --formula | grep -q "^$package$"; then
-        brew install "$package"
-    fi
-done
-
 # Font installations
 NERD_FONTS=(
     "font-jetbrains-mono-nerd-font"
     "font-fira-code-nerd-font"
 )
 
-for font in "${NERD_FONTS[@]}"; do
-    if ! brew list --cask | grep -q "^$font$"; then
-        brew install --cask "$font"
-    fi
-done
-
 # Cask applications
 CASK_APPS=(
     "iterm2"
 )
 
-for app in "${CASK_APPS[@]}"; do
-    if ! brew list --cask | grep -q "^$app$"; then
-        brew install --cask "$app"
+# Input parsing
+if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ -z "$1" ] ; then
+    echo "Usage: osx-package-install.sh [--help|-h] server|workstation"
+    echo "  server:      Core utils, Basic tools, Network/Security, General utils, and James's tools"
+    echo "  workstation: Server + Fonts + Cask apps"
+    echo "  (IoT profile is not supported on macOS)"
+    exit 0
+elif [ "$1" = "server" ]; then
+    MODE="server"
+    FORMULAE_TO_INSTALL=(
+        "${GNU_CORE_UTILS[@]}"
+        "${BASIC_TOOLS[@]}"
+        "${NETWORK_SECURITY_TOOLS[@]}"
+        "${GENERAL_UTILITIES[@]}"
+        "${JAMES_TOOLS[@]}"
+    )
+    CASKS_TO_INSTALL=()
+elif [ "$1" = "workstation" ]; then
+    MODE="workstation"
+    FORMULAE_TO_INSTALL=(
+        "${GNU_CORE_UTILS[@]}"
+        "${BASIC_TOOLS[@]}"
+        "${NETWORK_SECURITY_TOOLS[@]}"
+        "${GENERAL_UTILITIES[@]}"
+        "${JAMES_TOOLS[@]}"
+    )
+    CASKS_TO_INSTALL=(
+        "${NERD_FONTS[@]}"
+        "${CASK_APPS[@]}"
+    )
+else
+    echo "Invalid or unsupported option: $1"
+    exit 1
+fi
+
+echo "Installing packages for $MODE mode..."
+
+for package in "${FORMULAE_TO_INSTALL[@]}"; do
+    if ! brew list --formula | grep -q "^$package$"; then
+        brew install "$package"
+    else
+        echo "$package is already installed."
     fi
 done
+
+for cask in "${CASKS_TO_INSTALL[@]}"; do
+    if ! brew list --cask | grep -q "^$cask$"; then
+        brew install --cask "$cask"
+    else
+        echo "$cask is already installed."
+    fi
+done
+
+# Create symlink for sha256sum
+if [ ! -L "${BREW_PREFIX}/bin/sha256sum" ]; then
+    ln -s "${BREW_PREFIX}/bin/gsha256sum" "${BREW_PREFIX}/bin/sha256sum"
+fi
+
+# Switch to using brew-installed zsh as default shell
+if ! fgrep -q "${BREW_PREFIX}/bin/zsh" /etc/shells; then
+  echo "${BREW_PREFIX}/bin/zsh" | sudo tee -a /etc/shells;
+  chsh -s "${BREW_PREFIX}/bin/zsh";
+fi;
+
 echo 'export PATH="/opt/homebrew/opt/ruby/bin:$PATH"' >> ~/.zshrc
 
 # Remove outdated versions from the cellar.
