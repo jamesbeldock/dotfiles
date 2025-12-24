@@ -110,6 +110,16 @@ NERD_FONTS=(
 # Cask applications
 CASK_APPS=(
     "iterm2"
+    "wezterm"
+    "alfred"
+    "spotify"
+    "docker"
+    "cmake"
+    "vimr"
+    "itsycal"
+    "dash"
+    "1password"
+    "1password-cli"
 )
 
 # Input parsing
