@@ -83,3 +83,4 @@ fastfetch
 
 # Added by Antigravity
 export PATH="/Users/j/.antigravity/antigravity/bin:$PATH"
+export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
