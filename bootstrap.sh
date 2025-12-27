@@ -1,15 +1,17 @@
-set -x	# debugging on
-pwd
+#! /bin/bash
+
+# set -x	# debugging on
+# pwd
 
 # Run this script first of all. It will run the others.
 
 # Parse command line arguments
-if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ -z "$1" ] ; then
+if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]] || [[ -z "$1" ]]; then
 	echo "Usage: bootstrap.sh [--help|-h] server|workstation|iot"
 	echo "This script bootstraps a new machine by installing packages and stowing dotfiles."
 	echo "server, workstation, and iot are predefined sets of packages."
 	exit 0
-elif [ "$1" = "server" ] || [ "$1" = "workstation" ] || [ "$1" = "iot" ] ; then
+elif [[ "$1" = "server" ]] || [[ "$1" == "workstation" ]] || [[ "$1" == "iot" ]]; then
 	MODE="$1"
 else
 	echo "Invalid option: $1"
@@ -17,7 +19,7 @@ else
 	exit 1
 fi
 
-source ./shell.sh		#TODO: fix this for Linux
+# source ./shell.sh #TODO: fix this for Linux
 if [[ "$OSTYPE" == "darwin"* ]]; then
 	source ./osx-package-install.sh "$MODE"
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
@@ -28,8 +30,8 @@ source ./stow-packages.sh "$MODE"
 
 #atuin installation and stow package
 zinit ice as"command" from"gh-r" bpick"atuin-*.tar.gz" mv"atuin*/atuin -> atuin" \
-    atclone"./atuin init zsh > init.zsh; ./atuin gen-completions --shell zsh > _atuin" \
-    atpull"%atclone" src"init.zsh"
+	atclone"./atuin init zsh > init.zsh; ./atuin gen-completions --shell zsh > _atuin" \
+	atpull"%atclone" src"init.zsh"
 zinit light atuinsh/atuin
 stow -v -t ~/ --dotfiles atuin
 

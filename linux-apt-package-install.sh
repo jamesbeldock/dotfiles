@@ -1,40 +1,38 @@
-# TODO: remove this warning:
-# this hasn't been debugged yet; don't trust this to work
-echo "WARNING: This script hasn't been debugged yet; don't trust this to work"
+#! /bin/bash
 
 GNU_CORE_UTILS=(
-    "coreutils"
-    "moreutils"  # Install some other useful utilities like `sponge`
-    "findutils"  # Install GNU `find`, `locate`, `updatedb`, and `xargs`, `g`-prefixed
-    "bash"       # Install a modern version of Bash
-    "bash-completion2"
-    "wget"
-    "gnu-sed"
-    "stow"
+	"coreutils"
+	"moreutils" # Install some other useful utilities like `sponge`
+	"findutils" # Install GNU `find`, `locate`, `updatedb`, and `xargs`, `g`-prefixed
+	"bash"      # Install a modern version of Bash
+	"bash-completion2"
+	"wget"
+	"gnu-sed"
+	"stow"
 )
 
 BASIC_TOOLS=(
-    "grep"
-    "openssh"
-    "screen"
-    "php"
-    "gmp"
-    "vim"
-    "gnupg"
+	"grep"
+	"openssh"
+	"screen"
+	"php"
+	"gmp"
+	"vim"
+	"gnupg"
 )
 
 # Network and security tools
 NETWORK_SECURITY_TOOLS=(
-    "dns2tcp"
-    "knock"
-    "netpbm"
-    "nmap"
-    "pngcheck"
-    "socat"
-    "sqlmap"
-    "tcptrace"
-    "xpdf"
-    "xz"
+	"dns2tcp"
+	"knock"
+	"netpbm"
+	"nmap"
+	"pngcheck"
+	"socat"
+	"sqlmap"
+	"tcptrace"
+	"xpdf"
+	"xz"
 )
 
 # Install other useful binaries.
@@ -144,5 +142,7 @@ for package in "${PACKAGES_TO_INSTALL[@]}"; do
     fi
 done
 
+# install or update starship
+curl -sS https://starship.rs/install.sh | sh
 # Remove outdated versions from the cellar.
 sudo apt-get autoremove -y

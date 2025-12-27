@@ -1,6 +1,10 @@
-export PATH="/opt/homebrew/bin:$PATH" # use homebrew-installed binaries first
-export HOMEBREW_NO_ENV_HINTS=1
-
+# use homebrew if it is installed
+if command -v brew &> /dev/null; then
+  export PATH="/opt/homebrew/bin:opt/homebrew/sbin:$PATH" # use homebrew-installed binaries first
+  export HOMEBREW_NO_ENV_HINTS=1
+  export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
+  export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
+fi
 
 # start in tmux if it's installed, in interactive terminal, and not already inside tmux
 if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]; then
@@ -19,9 +23,9 @@ zstyle ':omz:update' frequency 7
 # Uncomment the following line if pasting URLs and other text is messed up.
 # DISABLE_MAGIC_FUNCTIONS="true"
 
-ENABLE_CORRECTION="true".
+ENABLE_CORRECTION="true"
 
-plugins=(z git docker docker-compose extract sudo colored-man-pages fzf)
+plugins=(z aliases git docker docker-compose extract sudo colored-man-pages fzf)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -57,18 +61,9 @@ zinit ice blockf
 zinit light zsh-users/zsh-completions
 
 
-export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
-export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
-export PATH="$PATH:/opt/homebrew/sbin"
-
 source "$HOME/.aliases"
 source "$HOME/.exports"
 source "$HOME/.functions"
-
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
-export PATH="/opt/homebrew/bin:/opt/homebrew/bin/bash:/opt/homebrew/opt/ruby/bin:$PATH"
 
 # atuin
 eval "$(atuin init zsh)"
@@ -83,4 +78,3 @@ fastfetch
 
 # Added by Antigravity
 export PATH="/Users/j/.antigravity/antigravity/bin:$PATH"
-export PATH="/opt/homebrew/opt/ruby/bin:$PATH"

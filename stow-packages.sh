@@ -1,10 +1,12 @@
-if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ -z "$1" ] ; then
+#! /bin/bash
+
+if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]] || [[ -z "$1" ]]; then
 	echo "Usage: stow-packages.sh [--help|-h] server|workstation|iot"
 	echo "This script uses GNU Stow to symlink dotfiles from the stow-packages directory to the home directory."
 	echo "Each subdirectory in stow-packages represents a package of dotfiles to be managed."
 	echo "server, workstation, and iot are predefined sets of packages."
-	exit 0	
-elif [ "$1" = "workstation" ] ; then
+	exit 0
+elif [[ "$1" == "workstation" ]]; then
 	MODE="workstation"
 	PACKAGE=(
 		"basic"
@@ -18,8 +20,8 @@ elif [ "$1" = "workstation" ] ; then
 		"tmux"
 		"wezterm"
 		"zsh"
-	)	
-elif [ "$1" = "server" ] ; then
+	)
+elif [[ "$1" == "server" ]]; then
 	MODE="server"
 	PACKAGE=(
 		"basic"
@@ -28,9 +30,10 @@ elif [ "$1" = "server" ] ; then
 		"git"
 		"nvim"
 		"tmux"
+		"starship"
 		"zsh"
-	)	
-elif [ "$1" = "iot" ] ; then
+	)
+elif [[ "$1" == "iot" ]]; then
 	MODE="iot"
 	PACKAGE=(
 		"basic"
@@ -39,7 +42,7 @@ elif [ "$1" = "iot" ] ; then
 		"nvim"
 		"tmux"
 		"zsh"
-	)	
+	)
 else
 	exit 1
 fi
