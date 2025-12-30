@@ -1,6 +1,6 @@
 # James's dotfiles
 
-(a work in progress based on [Mathias's dotfiles](https://github.com/mathiasbynens/dotfiles))
+(a work in progress, originally and still loosely based on [Mathias's dotfiles](https://github.com/mathiasbynens/dotfiles))
 
 ## New Mac Setup
 
