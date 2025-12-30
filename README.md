@@ -10,9 +10,6 @@
 1. `mkdir ~/dev` place for these and other projects
 1. `gh auth login` go through auth process
 1. `gh repo clone jamesbeldock/dotfiles`
-1. `source dotfiles/brew.sh`
-1. `source dotfiles/shells.sh` (authorizes and points user shell to `/usr/local/bin/zsh` copy from Homebrew)
-1. `source dotfiles/gems.sh` (requires `sudo` privileges)
 1. `source dotfiles/bootstrap.sh`
 
 ## Linux Setup
