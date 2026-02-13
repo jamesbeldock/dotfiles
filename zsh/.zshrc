@@ -75,6 +75,4 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 eval "$(starship init zsh)"
 
 fastfetch
-
-# Added by Antigravity
-export PATH="/Users/j/.antigravity/antigravity/bin:$PATH"
+export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
