@@ -59,34 +59,35 @@ GENERAL_UTILITIES=(
 
 # James's preferred tools
 JAMES_TOOLS=(
-	"starship"
-	"bat"
-	"zsh"
-	"fzf"
-	"luarocks"
-	"gh"
-	"pandoc"
-	"ripgrep"
-	"tmux"
-	"mosh"
-	"atuin"
-	"eza"
-	"fd"
-	"python3"
-	"neovim"
-	"broot"
-	"bottom"
-	"git-delta"
-	"uv"
-	"thefuck"
-	"mtr"
-	"htop"
-	"tpm"
-	"yazi"
-	"stow"
-	"ruby"
-	"tldr"
-	"fastfetch"
+    "starship"
+    "bat"
+    "zsh"
+    "fzf"
+    "luarocks"
+    "gh"
+    "pandoc"
+    "ripgrep"
+    "tmux"
+    "mosh"
+    "atuin"
+    "eza"
+    "fd"
+    "python3"
+    "neovim"
+    "broot"
+    "bottom"
+    "git-delta"
+    "uv"
+    "thefuck"
+    "mtr"
+    "htop"
+    "tpm"
+    "yazi"
+    "stow"
+    "ruby"
+    "tldr"
+    "fastfetch"
+    "trash"
 )
 
 # Font installations
@@ -97,17 +98,18 @@ NERD_FONTS=(
 
 # Cask applications
 CASK_APPS=(
-	"iterm2"
-	"wezterm"
-	"alfred"
-	"spotify"
-	"docker"
-	"cmake"
-	"vimr"
-	"itsycal"
-	"dash"
-	"1password"
-	"1password-cli"
+    "iterm2"
+    "wezterm"
+    "visual-studio-code"
+    "alfred"
+    "spotify"
+    "docker"
+    "cmake"
+    "vimr"
+    "itsycal"
+    "dash"
+    "1password"
+    "1password-cli"
 	"flux-app"
 )
 
@@ -179,8 +181,8 @@ execute_install() {
 			brew install "$package"
 		else
 			echo "$package is already installed."
-		fi
-	done
+    fi
+done
 
 	for cask in "${CASKS_TO_INSTALL[@]}"; do
 		if ! brew list --cask | grep -q "^$cask$"; then
