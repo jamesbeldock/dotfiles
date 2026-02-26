@@ -129,14 +129,24 @@ else
     exit 1
 fi
 
+# Detect privilege level
+if [ "$(id -u)" -eq 0 ]; then
+    SUDO=""
+    PRIV_MODE="root (no sudo required)"
+else
+    SUDO="sudo"
+    PRIV_MODE="non-root (sudo will be used where required)"
+fi
+
+echo "Privilege mode: $PRIV_MODE"
 echo "Installing packages for $MODE mode..."
 
-sudo apt-get update
-sudo apt-get upgrade -y
+$SUDO apt-get update
+$SUDO apt-get upgrade -y
 
 for package in "${PACKAGES_TO_INSTALL[@]}"; do
     if ! apt list --installed 2>/dev/null | grep -q "^${package}/"; then
-        sudo apt-get install -y "$package"
+        $SUDO apt-get install -y "$package"
     else
         echo "$package is already installed."
     fi
@@ -145,4 +155,4 @@ done
 # install or update starship
 curl -sS https://starship.rs/install.sh | sh
 # Remove outdated versions from the cellar.
-sudo apt-get autoremove -y
+$SUDO apt-get autoremove -y

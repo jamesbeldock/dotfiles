@@ -47,6 +47,14 @@ else
 	exit 1
 fi
 
+# Detect privilege level
+if [ "$(id -u)" -eq 0 ]; then
+	PRIV_MODE="root (no sudo required)"
+else
+	PRIV_MODE="non-root (sudo will be used where required)"
+fi
+
+echo "Privilege mode: $PRIV_MODE"
 echo "Stowing packages in $MODE mode..."
 
 for package in "${PACKAGE[@]}"; do
