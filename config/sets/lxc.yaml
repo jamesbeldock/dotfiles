@@ -1,0 +1,16 @@
+name: lxc
+description: "Minimal tools, Core utils, and LXC-specific tools"
+
+stow_packages:
+  - basic
+  - config resources
+  - fastfetch
+  - nvim
+  - tmux
+  - zsh
+
+linux:
+  groups:
+    - gnu_core_utils
+    - basic_tools
+    - lxc_tools

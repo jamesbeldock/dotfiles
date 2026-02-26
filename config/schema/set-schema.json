@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Package Set Configuration",
+  "description": "Configuration for a package set (server, workstation, iot, lxc)",
+  "type": "object",
+  "required": ["name", "stow_packages"],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Set identifier"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of this set"
+    },
+    "stow_packages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Stow packages to symlink for this set"
+    },
+    "linux": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Package group names to install on Linux"
+        }
+      }
+    },
+    "macos": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "formulae_groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Package group names to install as Homebrew formulae"
+        },
+        "cask_groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Package group names to install as Homebrew casks"
+        }
+      }
+    }
+  }
+}

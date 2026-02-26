@@ -1,0 +1,35 @@
+name: workstation
+description: "Full workstation setup with GUI applications and fonts"
+
+stow_packages:
+  - basic
+  - config resources
+  - fastfetch
+  - git
+  - iterm2
+  - nvim
+  - oh-my-zsh
+  - starship
+  - tmux
+  - wezterm
+  - zsh
+
+linux:
+  groups:
+    - gnu_core_utils
+    - basic_tools
+    - james_tools
+    - network_security_tools
+    - general_utilities
+    - nerd_fonts
+
+macos:
+  formulae_groups:
+    - gnu_core_utils
+    - basic_tools
+    - james_tools
+    - network_security_tools
+    - general_utilities
+  cask_groups:
+    - nerd_fonts
+    - cask_apps

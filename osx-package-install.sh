@@ -1,115 +1,6 @@
 #! /bin/bash
 
-# Install GNU core utilities (those that come with macOS are outdated).
-# Don't forget to add `$(brew --prefix coreutils)/libexec/gnubin` to `$PATH`.
-GNU_CORE_UTILS=(
-	"coreutils"
-	"moreutils" # Install some other useful utilities like `sponge`
-	"findutils" # Install GNU `find`, `locate`, `updatedb`, and `xargs`, `g`-prefixed
-	"bash"      # Install a modern version of Bash
-	"bash-completion2"
-	"wget"
-	"gnu-sed"
-	"stow"
-)
-
-# Install more recent versions of some macOS tools.
-BASIC_TOOLS=(
-	"grep"
-	"openssh"
-	"screen"
-	"php"
-	"gmp"
-	"vim"
-	"gnupg"
-)
-
-# Network and security tools
-NETWORK_SECURITY_TOOLS=(
-	"dns2tcp"
-	"knock"
-	"netpbm"
-	"nmap"
-	"pngcheck"
-	"socat"
-	"sqlmap"
-	"tcptrace"
-	"xpdf"
-	"xz"
-)
-
-# Install other useful binaries.
-GENERAL_UTILITIES=(
-	"ack"
-	"git"
-	"git-lfs"
-	"gs"
-	"lua"
-	"lynx"
-	"p7zip"
-	"pigz"
-	"pv"
-	"rename"
-	"rlwrap"
-	"ssh-copy-id"
-	"tree"
-	"vbindiff"
-	"zopfli"
-)
-
-# James's preferred tools
-JAMES_TOOLS=(
-	"starship"
-	"bat"
-	"zsh"
-	"fzf"
-	"luarocks"
-	"gh"
-	"pandoc"
-	"ripgrep"
-	"tmux"
-	"mosh"
-	"atuin"
-	"eza"
-	"fd"
-	"python3"
-	"neovim"
-	"broot"
-	"bottom"
-	"git-delta"
-	"uv"
-	"thefuck"
-	"mtr"
-	"htop"
-	"tpm"
-	"yazi"
-	"stow"
-	"ruby"
-	"tldr"
-	"fastfetch"
-)
-
-# Font installations
-NERD_FONTS=(
-	"font-jetbrains-mono-nerd-font"
-	"font-fira-code-nerd-font"
-)
-
-# Cask applications
-CASK_APPS=(
-	"iterm2"
-	"wezterm"
-	"alfred"
-	"spotify"
-	"docker"
-	"cmake"
-	"vimr"
-	"itsycal"
-	"dash"
-	"1password"
-	"1password-cli"
-	"flux-app"
-)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ensure_brew: checks for brew, installs if missing, runs update/upgrade.
 ensure_brew() {
@@ -128,7 +19,7 @@ ensure_brew() {
 	BREW_PREFIX=$(brew --prefix)
 }
 
-# parse_args: sets MODE, FORMULAE_TO_INSTALL, CASKS_TO_INSTALL.
+# parse_args: sets MODE, FORMULAE_TO_INSTALL, CASKS_TO_INSTALL from YAML config.
 # Returns 0 on success, 1 for help, 2 for invalid arg, 3 for iot early exit.
 parse_args() {
 	if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ -z "$1" ]; then
@@ -140,29 +31,10 @@ parse_args() {
 	elif [ "$1" = "iot" ]; then
 		echo "IoT profile is not applicable on macOS. Skipping package installation."
 		return 3
-	elif [ "$1" = "server" ]; then
-		MODE="server"
-		FORMULAE_TO_INSTALL=(
-			"${GNU_CORE_UTILS[@]}"
-			"${BASIC_TOOLS[@]}"
-			"${JAMES_TOOLS[@]}"
-			"${NETWORK_SECURITY_TOOLS[@]}"
-			"${GENERAL_UTILITIES[@]}"
-		)
-		CASKS_TO_INSTALL=()
-	elif [ "$1" = "workstation" ]; then
-		MODE="workstation"
-		FORMULAE_TO_INSTALL=(
-			"${GNU_CORE_UTILS[@]}"
-			"${BASIC_TOOLS[@]}"
-			"${JAMES_TOOLS[@]}"
-			"${NETWORK_SECURITY_TOOLS[@]}"
-			"${GENERAL_UTILITIES[@]}"
-		)
-		CASKS_TO_INSTALL=(
-			"${NERD_FONTS[@]}"
-			"${CASK_APPS[@]}"
-		)
+	elif [ "$1" = "server" ] || [ "$1" = "workstation" ]; then
+		MODE="$1"
+		eval "$(python3 "$SCRIPT_DIR/tools/load_config.py" --set "$MODE" --platform macos --type formulae)"
+		eval "$(python3 "$SCRIPT_DIR/tools/load_config.py" --set "$MODE" --platform macos --type casks)"
 	else
 		echo "Invalid option: $1"
 		return 2

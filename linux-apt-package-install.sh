@@ -1,114 +1,8 @@
 #! /bin/bash
 
-GNU_CORE_UTILS=(
-	"coreutils"
-	"moreutils" # Install some other useful utilities like `sponge`
-	"findutils" # Install GNU `find`, `locate`, `updatedb`, and `xargs`, `g`-prefixed
-	"bash"      # Install a modern version of Bash
-	"bash-completion2"
-	"wget"
-	"gnu-sed"
-	"stow"
-)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-BASIC_TOOLS=(
-	"grep"
-	"openssh"
-	"screen"
-	"php"
-	"gmp"
-	"vim"
-	"gnupg"
-)
-
-# Network and security tools
-NETWORK_SECURITY_TOOLS=(
-	"dns2tcp"
-	"knock"
-	"netpbm"
-	"nmap"
-	"pngcheck"
-	"socat"
-	"sqlmap"
-	"tcptrace"
-	"xpdf"
-	"xz"
-)
-
-# Install other useful binaries.
-GENERAL_UTILITIES=(
-    "ack"
-    "git"
-    "git-lfs"
-    "gs"
-    "lua"
-    "lynx"
-    "p7zip"
-    "pigz"
-    "pv"
-    "rename"
-    "rlwrap"
-    "ssh-copy-id"
-    "tree"
-    "vbindiff"
-    "zopfli"
-)
-
-# James's preferred development tools
-JAMES_TOOLS=(
-    "bat"
-    "zsh"
-    "fzf"
-    "luarocks"
-    "gh"
-    "pandoc"
-    "ripgrep"
-    "tmux"
-    "mosh"
-    "atuin"
-    "eza"
-    "fd"
-    "python3"
-    "neovim"
-    "broot"
-    "bottom"
-    "git-delta"
-    "uv"
-    "thefuck"
-    "mtr"
-    "htop"
-    "tpm"
-    "yazi"
-    "stow"
-    "ruby"
-    'tldr'
-    "fastfetch"
-)
-
-# LXC-specific tools
-LXC_TOOLS=(
-    "git"
-    "git-lfs"
-    "lua"
-    "gh"
-    "ssh-copy-id"
-    "bat"
-    "zsh"
-    "tmux"
-    "mosh"
-    "atuin"
-    "neovim"
-    "stow"
-    "fastfetch"
-)
-
-# Font installations
-NERD_FONTS=(
-    "font-jetbrains-mono-nerd-font"
-    "font-fira-code-nerd-font"
-)
-
-# parse_args: sets MODE and PACKAGES_TO_INSTALL.
+# parse_args: sets MODE and PACKAGES_TO_INSTALL from YAML config.
 # Returns 0 on success, 1 for help, 2 for invalid arg.
 parse_args() {
     if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ -z "$1" ] ; then
@@ -118,39 +12,9 @@ parse_args() {
         echo "  server:      IoT + Network/Security tools + General utilities (git, etc.)"
         echo "  workstation: Server + Fonts"
         return 1
-    elif [ "$1" = "iot" ]; then
-        MODE="iot"
-        PACKAGES_TO_INSTALL=(
-            "${GNU_CORE_UTILS[@]}"
-            "${BASIC_TOOLS[@]}"
-            "${JAMES_TOOLS[@]}"
-        )
-    elif [ "$1" = "lxc" ]; then
-        MODE="lxc"
-        PACKAGES_TO_INSTALL=(
-            "${GNU_CORE_UTILS[@]}"
-            "${BASIC_TOOLS[@]}"
-            "${LXC_TOOLS[@]}"
-        )
-    elif [ "$1" = "server" ]; then
-        MODE="server"
-        PACKAGES_TO_INSTALL=(
-            "${GNU_CORE_UTILS[@]}"
-            "${BASIC_TOOLS[@]}"
-            "${JAMES_TOOLS[@]}"
-            "${NETWORK_SECURITY_TOOLS[@]}"
-            "${GENERAL_UTILITIES[@]}"
-        )
-    elif [ "$1" = "workstation" ]; then
-        MODE="workstation"
-        PACKAGES_TO_INSTALL=(
-            "${GNU_CORE_UTILS[@]}"
-            "${BASIC_TOOLS[@]}"
-            "${JAMES_TOOLS[@]}"
-            "${NETWORK_SECURITY_TOOLS[@]}"
-            "${GENERAL_UTILITIES[@]}"
-            "${NERD_FONTS[@]}"
-        )
+    elif [ "$1" = "iot" ] || [ "$1" = "lxc" ] || [ "$1" = "server" ] || [ "$1" = "workstation" ]; then
+        MODE="$1"
+        eval "$(python3 "$SCRIPT_DIR/tools/load_config.py" --set "$MODE" --platform linux)"
     else
         echo "Invalid option: $1"
         return 2

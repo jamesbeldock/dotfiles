@@ -1,6 +1,8 @@
 #! /bin/bash
 
-# parse_args: sets MODE and PACKAGE array.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# parse_args: sets MODE and PACKAGE array from YAML config.
 # Returns 0 on success, 1 for help, 2 for invalid arg.
 parse_args() {
 	if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]] || [[ -z "$1" ]]; then
@@ -9,53 +11,9 @@ parse_args() {
 		echo "Each subdirectory in stow-packages represents a package of dotfiles to be managed."
 		echo "server, workstation, iot, and lxc are predefined sets of packages."
 		return 1
-	elif [[ "$1" == "workstation" ]]; then
-		MODE="workstation"
-		PACKAGE=(
-			"basic"
-			"config resources"
-			"fastfetch"
-			"git"
-			"iterm2"
-			"nvim"
-			"oh-my-zsh"
-			"starship"
-			"tmux"
-			"wezterm"
-			"zsh"
-		)
-	elif [[ "$1" == "server" ]]; then
-		MODE="server"
-		PACKAGE=(
-			"basic"
-			"config resources"
-			"fastfetch"
-			"git"
-			"nvim"
-			"tmux"
-			"starship"
-			"zsh"
-		)
-	elif [[ "$1" == "iot" ]]; then
-		MODE="iot"
-		PACKAGE=(
-			"basic"
-			"config resources"
-			"fastfetch"
-			"nvim"
-			"tmux"
-			"zsh"
-		)
-	elif [[ "$1" == "lxc" ]]; then
-		MODE="lxc"
-		PACKAGE=(
-			"basic"
-			"config resources"
-			"fastfetch"
-			"nvim"
-			"tmux"
-			"zsh"
-		)
+	elif [[ "$1" == "workstation" ]] || [[ "$1" == "server" ]] || [[ "$1" == "iot" ]] || [[ "$1" == "lxc" ]]; then
+		MODE="$1"
+		eval "$(python3 "$SCRIPT_DIR/tools/load_config.py" --set "$MODE" --type stow)"
 	else
 		return 2
 	fi

@@ -1,0 +1,148 @@
+groups:
+  gnu_core_utils:
+    description: "GNU core utilities"
+    packages:
+      - name: coreutils
+      - name: moreutils
+        description: "Install some other useful utilities like sponge"
+      - name: findutils
+        description: "GNU find, locate, updatedb, and xargs, g-prefixed"
+      - name: bash
+        description: "Install a modern version of Bash"
+      - name: bash-completion2
+      - name: wget
+      - name: gnu-sed
+      - name: stow
+
+  basic_tools:
+    description: "Basic system tools"
+    packages:
+      - name: grep
+      - name: openssh
+      - name: screen
+      - name: php
+      - name: gmp
+      - name: vim
+      - name: gnupg
+
+  network_security_tools:
+    description: "Network and security tools"
+    packages:
+      - name: dns2tcp
+      - name: knock
+      - name: netpbm
+      - name: nmap
+      - name: pngcheck
+      - name: socat
+      - name: sqlmap
+      - name: tcptrace
+      - name: xpdf
+      - name: xz
+
+  general_utilities:
+    description: "General utility binaries"
+    packages:
+      - name: ack
+      - name: git
+      - name: git-lfs
+      - name: gs
+      - name: lua
+      - name: lynx
+      - name: p7zip
+      - name: pigz
+      - name: pv
+      - name: rename
+      - name: rlwrap
+      - name: ssh-copy-id
+      - name: tree
+      - name: vbindiff
+      - name: zopfli
+
+  james_tools:
+    description: "James's preferred development tools"
+    platform_overrides:
+      macos:
+        extra_packages:
+          - name: starship
+    packages:
+      - name: bat
+      - name: zsh
+      - name: fzf
+      - name: luarocks
+      - name: gh
+      - name: pandoc
+      - name: ripgrep
+      - name: tmux
+      - name: mosh
+      - name: atuin
+      - name: eza
+      - name: fd
+      - name: python3
+      - name: neovim
+      - name: broot
+      - name: bottom
+      - name: git-delta
+      - name: uv
+      - name: thefuck
+      - name: mtr
+      - name: htop
+      - name: tpm
+      - name: yazi
+      - name: stow
+      - name: ruby
+      - name: tldr
+      - name: fastfetch
+
+  lxc_tools:
+    description: "LXC-specific tools"
+    packages:
+      - name: git
+      - name: git-lfs
+      - name: lua
+      - name: gh
+      - name: ssh-copy-id
+      - name: bat
+      - name: zsh
+      - name: tmux
+      - name: mosh
+      - name: atuin
+      - name: neovim
+      - name: stow
+      - name: fastfetch
+
+  nerd_fonts:
+    description: "Nerd Font installations"
+    packages:
+      - name: font-jetbrains-mono-nerd-font
+      - name: font-fira-code-nerd-font
+
+  cask_apps:
+    description: "macOS Cask applications"
+    platform: macos_only
+    install_type: cask
+    packages:
+      - name: iterm2
+      - name: wezterm
+      - name: alfred
+      - name: spotify
+      - name: docker
+      - name: cmake
+      - name: vimr
+      - name: itsycal
+      - name: dash
+      - name: 1password
+      - name: 1password-cli
+      - name: flux-app
+
+stow_packages:
+  - basic
+  - config resources
+  - fastfetch
+  - git
+  - iterm2
+  - nvim
+  - oh-my-zsh
+  - starship
+  - tmux
+  - wezterm
+  - zsh

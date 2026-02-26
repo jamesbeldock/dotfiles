@@ -1,0 +1,28 @@
+name: server
+description: "IoT + Network/Security tools + General utilities (git, etc.)"
+
+stow_packages:
+  - basic
+  - config resources
+  - fastfetch
+  - git
+  - nvim
+  - tmux
+  - starship
+  - zsh
+
+linux:
+  groups:
+    - gnu_core_utils
+    - basic_tools
+    - james_tools
+    - network_security_tools
+    - general_utilities
+
+macos:
+  formulae_groups:
+    - gnu_core_utils
+    - basic_tools
+    - james_tools
+    - network_security_tools
+    - general_utilities

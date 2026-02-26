@@ -1,0 +1,16 @@
+name: iot
+description: "Basic tools, Core utils, and James's tools (tmux, zsh, etc.)"
+
+stow_packages:
+  - basic
+  - config resources
+  - fastfetch
+  - nvim
+  - tmux
+  - zsh
+
+linux:
+  groups:
+    - gnu_core_utils
+    - basic_tools
+    - james_tools

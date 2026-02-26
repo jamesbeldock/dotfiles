@@ -17,5 +17,13 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Python dependencies
+        run: pip install -r tools/requirements.txt
+
       - name: Run BATS tests
         run: ./test/libs/bats-core/bin/bats test/
