@@ -85,6 +85,23 @@ JAMES_TOOLS=(
     "fastfetch"
 )
 
+# LXC-specific tools
+LXC_TOOLS=(
+    "git"
+    "git-lfs"
+    "lua"
+    "gh"
+    "ssh-copy-id"
+    "bat"
+    "zsh"
+    "tmux"
+    "mosh"
+    "atuin"
+    "neovim"
+    "stow"
+    "fastfetch"
+)
+
 # Font installations
 NERD_FONTS=(
     "font-jetbrains-mono-nerd-font"
@@ -93,8 +110,9 @@ NERD_FONTS=(
 
 # Input parsing
 if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ -z "$1" ] ; then
-    echo "Usage: linux-apt-package-install.sh [--help|-h] server|workstation|iot"
+    echo "Usage: linux-apt-package-install.sh [--help|-h] server|workstation|iot|lxc"
     echo "  iot:         Basic tools, Core utils, and James's tools (tmux, zsh, etc.)"
+    echo "  lxc:         Minimal tools, Core utils, and James's tools (tmux, zsh, etc.)"
     echo "  server:      IoT + Network/Security tools + General utilities (git, etc.)"
     echo "  workstation: Server + Fonts"
     exit 0
@@ -104,6 +122,13 @@ elif [ "$1" = "iot" ]; then
         "${GNU_CORE_UTILS[@]}"
         "${BASIC_TOOLS[@]}"
         "${JAMES_TOOLS[@]}"
+    )
+elif [ "$1" = "lxc" ]; then
+    MODE="lxc"
+    PACKAGES_TO_INSTALL=(
+        "${GNU_CORE_UTILS[@]}"
+        "${BASIC_TOOLS[@]}"
+        "${LXC_TOOLS[@]}"
     )
 elif [ "$1" = "server" ]; then
     MODE="server"

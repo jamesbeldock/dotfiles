@@ -1,7 +1,7 @@
 #! /bin/bash
 
 if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]] || [[ -z "$1" ]]; then
-	echo "Usage: stow-packages.sh [--help|-h] server|workstation|iot"
+	echo "Usage: stow-packages.sh [--help|-h] server|workstation|iot|lxc"
 	echo "This script uses GNU Stow to symlink dotfiles from the stow-packages directory to the home directory."
 	echo "Each subdirectory in stow-packages represents a package of dotfiles to be managed."
 	echo "server, workstation, and iot are predefined sets of packages."
@@ -35,6 +35,16 @@ elif [[ "$1" == "server" ]]; then
 	)
 elif [[ "$1" == "iot" ]]; then
 	MODE="iot"
+	PACKAGE=(
+		"basic"
+		"config resources"
+		"fastfetch"
+		"nvim"
+		"tmux"
+		"zsh"
+	)
+elif [[ "$1" == "lxc" ]]; then
+	MODE="lxc"
 	PACKAGE=(
 		"basic"
 		"config resources"
