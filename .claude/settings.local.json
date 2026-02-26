@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/bin/ls /Users/j/code/dotfiles/*.sh)",
+      "Bash(/bin/ls -d /Users/j/code/dotfiles/*/)",
+      "Bash(/bin/ls /Users/j/code/dotfiles/.gitmodules)",
+      "Bash(/bin/ls /Users/j/code/dotfiles/README*)",
+      "Bash(/bin/ls /Users/j/code/dotfiles/Makefile)",
+      "Bash(git checkout -b add-unit-tests)",
+      "Bash(git submodule add https://github.com/bats-core/bats-core.git test/libs/bats-core)",
+      "Bash(git submodule add https://github.com/bats-core/bats-support.git test/libs/bats-support)",
+      "Bash(git submodule add https://github.com/bats-core/bats-assert.git test/libs/bats-assert)",
+      "Bash(./test/libs/bats-core/bin/bats test/)",
+      "Bash(bash /Users/j/code/dotfiles/stow-packages.sh --help)",
+      "Bash(bash /Users/j/code/dotfiles/linux-apt-package-install.sh --help)",
+      "Bash(bash /Users/j/code/dotfiles/osx-package-install.sh --help)",
+      "Bash(bash /Users/j/code/dotfiles/bootstrap.sh --help)",
+      "Bash(git reset HEAD~1)"
+    ]
+  }
+}
