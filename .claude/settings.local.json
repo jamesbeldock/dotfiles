@@ -15,7 +15,12 @@
       "Bash(bash /Users/j/code/dotfiles/linux-apt-package-install.sh --help)",
       "Bash(bash /Users/j/code/dotfiles/osx-package-install.sh --help)",
       "Bash(bash /Users/j/code/dotfiles/bootstrap.sh --help)",
-      "Bash(git reset HEAD~1)"
+      "Bash(git reset HEAD~1)",
+      "Bash(git push -u origin add-unit-tests)",
+      "Bash(/bin/ls test/libs/)",
+      "Bash(git add .gitmodules test/libs/bats-core test/libs/bats-support test/libs/bats-assert)",
+      "Bash(git commit:*)",
+      "Bash(git push)"
     ]
   }
 }
