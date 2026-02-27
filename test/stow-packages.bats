@@ -31,6 +31,29 @@ setup() {
 @test "parse_args with invalid argument returns 2" {
     run parse_args "foobar"
     [ "$status" -eq 2 ]
+    assert_output --partial "Invalid option"
+}
+
+# --- Dynamic set discovery ---
+
+@test "parse_args help shows available sets dynamically" {
+    run parse_args --help
+    assert_output --partial "Available sets:"
+    assert_output --partial "server"
+    assert_output --partial "workstation"
+}
+
+@test "parse_args --list returns 1 and shows sets" {
+    run parse_args --list
+    [ "$status" -eq 1 ]
+    assert_output --partial "Available sets:"
+}
+
+@test "parse_args accepts all discovered sets" {
+    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --list-sets)"
+    for set_name in "${AVAILABLE_SETS[@]}"; do
+        parse_args "$set_name"
+    done
 }
 
 # --- Mode setting ---

@@ -1,24 +1,46 @@
 #! /bin/bash
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/tools/discover_sets.sh"
 
 # parse_args: sets MODE and PACKAGES_TO_INSTALL from YAML config.
-# Returns 0 on success, 1 for help, 2 for invalid arg.
+# Returns 0 on success, 1 for help/list, 2 for invalid arg, 3 for platform skip.
 parse_args() {
-    if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ -z "$1" ] ; then
-        echo "Usage: linux-apt-package-install.sh [--help|-h] server|workstation|iot|lxc"
-        echo "  iot:         Basic tools, Core utils, and James's tools (tmux, zsh, etc.)"
-        echo "  lxc:         Minimal tools, Core utils, and James's tools (tmux, zsh, etc.)"
-        echo "  server:      IoT + Network/Security tools + General utilities (git, etc.)"
-        echo "  workstation: Server + Fonts"
+    if [ "$1" = "--list" ]; then
+        discover_sets "$SCRIPT_DIR" || return 2
+        echo "Available sets: ${AVAILABLE_SETS[*]}"
         return 1
-    elif [ "$1" = "iot" ] || [ "$1" = "lxc" ] || [ "$1" = "server" ] || [ "$1" = "workstation" ]; then
-        MODE="$1"
-        eval "$(python3 "$SCRIPT_DIR/tools/load_config.py" --set "$MODE" --platform linux)"
-    else
+    fi
+
+    if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ -z "$1" ]; then
+        discover_sets "$SCRIPT_DIR" || return 2
+        echo "Usage: linux-apt-package-install.sh [--help|-h|--list] <set>"
+        echo "Available sets: ${AVAILABLE_SETS[*]}"
+        return 1
+    fi
+
+    discover_sets "$SCRIPT_DIR" || return 2
+
+    if ! is_valid_set "$1"; then
         echo "Invalid option: $1"
+        echo "Available sets: ${AVAILABLE_SETS[*]}"
         return 2
     fi
+
+    # Check this set has linux config
+    check_set_platform "$SCRIPT_DIR" "$1" "linux"
+    if [ "$HAS_PLATFORM" != "true" ]; then
+        echo "Set '$1' has no Linux package configuration. Nothing to install."
+        return 3
+    fi
+
+    if ! validate_configs "$SCRIPT_DIR"; then
+        echo "Config validation failed. Aborting." >&2
+        return 2
+    fi
+
+    MODE="$1"
+    eval "$(python3 "$SCRIPT_DIR/tools/load_config.py" --set "$MODE" --platform linux)"
     return 0
 }
 
@@ -60,6 +82,7 @@ main() {
     local rc=$?
     if [ $rc -eq 1 ]; then exit 0; fi
     if [ $rc -eq 2 ]; then exit 1; fi
+    if [ $rc -eq 3 ]; then exit 0; fi
     detect_privilege
     execute_install
 }

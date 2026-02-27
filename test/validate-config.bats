@@ -44,6 +44,21 @@ EOF
     rm -rf "$tmpdir"
 }
 
+@test "validate_config.py catches filename-name mismatch" {
+    local tmpdir
+    tmpdir="$(mktemp -d)"
+    cp -r "${PROJECT_ROOT}/config/"* "$tmpdir/"
+    cat > "$tmpdir/sets/mismatch.yaml" << 'EOF'
+name: wrong_name
+stow_packages:
+  - basic
+EOF
+    run python3 "${PROJECT_ROOT}/tools/validate_config.py" --config-dir "$tmpdir"
+    assert_failure
+    assert_output --partial "name mismatch"
+    rm -rf "$tmpdir"
+}
+
 @test "validate_config.py catches macos_only group in linux.groups" {
     local tmpdir
     tmpdir="$(mktemp -d)"

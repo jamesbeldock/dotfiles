@@ -8,6 +8,7 @@ Usage:
     python3 load_config.py --set server --type stow
 """
 import argparse
+import glob
 import os
 import sys
 
@@ -52,6 +53,19 @@ def resolve_packages(catalog, group_names, platform=None):
     return packages
 
 
+def list_sets(config_dir):
+    """List available set names from config/sets/*.yaml filenames."""
+    sets_dir = os.path.join(config_dir, "sets")
+    set_files = sorted(glob.glob(os.path.join(sets_dir, "*.yaml")))
+    return [os.path.splitext(os.path.basename(f))[0] for f in set_files]
+
+
+def check_platform_support(config_dir, set_name, platform):
+    """Check if a set has configuration for a given platform."""
+    set_config = load_set_config(config_dir, set_name)
+    return platform in set_config
+
+
 def format_bash_array(var_name, values):
     """Format a list of values as a bash array assignment."""
     escaped = []
@@ -62,7 +76,11 @@ def format_bash_array(var_name, values):
 
 def main():
     parser = argparse.ArgumentParser(description="Load YAML config as bash variables")
-    parser.add_argument("--set", required=True, help="Set name (server, workstation, iot, lxc)")
+    parser.add_argument("--set", help="Set name")
+    parser.add_argument("--list-sets", action="store_true",
+                        help="List available config sets as a bash array")
+    parser.add_argument("--check-platform", choices=["linux", "macos"],
+                        help="Check if set supports this platform (outputs HAS_PLATFORM=true/false)")
     parser.add_argument("--platform", choices=["linux", "macos"], help="Target platform")
     parser.add_argument("--type", choices=["formulae", "casks", "stow"],
                         help="Output type (default: platform packages)")
@@ -70,6 +88,21 @@ def main():
     args = parser.parse_args()
 
     config_dir = args.config_dir or find_config_dir()
+
+    if args.list_sets:
+        names = list_sets(config_dir)
+        print(format_bash_array("AVAILABLE_SETS", names))
+        return
+
+    if not args.set:
+        print("Error: --set is required unless --list-sets is used", file=sys.stderr)
+        sys.exit(1)
+
+    if args.check_platform:
+        has_it = check_platform_support(config_dir, args.set, args.check_platform)
+        print(f'HAS_PLATFORM={"true" if has_it else "false"}')
+        return
+
     catalog = load_catalog(config_dir)
     set_config = load_set_config(config_dir, args.set)
 

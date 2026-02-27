@@ -34,8 +34,31 @@ setup() {
     assert_output --partial "Invalid option"
 }
 
-@test "parse_args iot returns 3 (early exit)" {
+# --- Dynamic set discovery ---
+
+@test "parse_args help shows available sets dynamically" {
+    run parse_args --help
+    assert_output --partial "Available sets:"
+    assert_output --partial "server"
+    assert_output --partial "workstation"
+}
+
+@test "parse_args --list returns 1 and shows sets" {
+    run parse_args --list
+    [ "$status" -eq 1 ]
+    assert_output --partial "Available sets:"
+}
+
+# --- Platform checks ---
+
+@test "parse_args returns 3 for sets without macos config" {
     run parse_args iot
+    [ "$status" -eq 3 ]
+    assert_output --partial "not applicable"
+}
+
+@test "parse_args returns 3 for lxc on macos" {
+    run parse_args lxc
     [ "$status" -eq 3 ]
     assert_output --partial "not applicable"
 }

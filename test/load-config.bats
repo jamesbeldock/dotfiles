@@ -9,6 +9,59 @@ load_packages() {
     eval "$(python3 "${PROJECT_ROOT}/tools/load_config.py" "$@")"
 }
 
+# --- list-sets ---
+
+@test "load_config.py --list-sets outputs AVAILABLE_SETS array" {
+    load_packages --list-sets
+    assert_array_contains AVAILABLE_SETS "server"
+    assert_array_contains AVAILABLE_SETS "workstation"
+    assert_array_contains AVAILABLE_SETS "iot"
+    assert_array_contains AVAILABLE_SETS "lxc"
+}
+
+@test "load_config.py --list-sets count matches yaml files" {
+    load_packages --list-sets
+    local file_count
+    file_count=$(command ls "$PROJECT_ROOT/config/sets/"*.yaml 2>/dev/null | wc -l | tr -d ' ')
+    assert_array_length AVAILABLE_SETS "$file_count"
+}
+
+@test "load_config.py --list-sets with empty dir returns empty array" {
+    local tmpdir
+    tmpdir="$(mktemp -d)"
+    mkdir -p "$tmpdir/sets"
+    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --list-sets --config-dir "$tmpdir")"
+    assert_array_length AVAILABLE_SETS 0
+    rm -rf "$tmpdir"
+}
+
+# --- check-platform ---
+
+@test "load_config.py --check-platform macos for server returns true" {
+    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --set server --check-platform macos)"
+    assert_equal "$HAS_PLATFORM" "true"
+}
+
+@test "load_config.py --check-platform macos for iot returns false" {
+    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --set iot --check-platform macos)"
+    assert_equal "$HAS_PLATFORM" "false"
+}
+
+@test "load_config.py --check-platform macos for lxc returns false" {
+    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --set lxc --check-platform macos)"
+    assert_equal "$HAS_PLATFORM" "false"
+}
+
+@test "load_config.py --check-platform linux for iot returns true" {
+    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --set iot --check-platform linux)"
+    assert_equal "$HAS_PLATFORM" "true"
+}
+
+@test "load_config.py --check-platform linux for workstation returns true" {
+    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --set workstation --check-platform linux)"
+    assert_equal "$HAS_PLATFORM" "true"
+}
+
 # --- Linux IoT ---
 
 @test "linux iot includes gnu_core_utils packages" {

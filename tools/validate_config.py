@@ -80,6 +80,12 @@ def main():
         # Schema validation
         errors.extend(validate_schema(set_config, set_schema, filename))
 
+        # Cross-validate: name field matches filename
+        expected_name = os.path.splitext(filename)[0]
+        actual_name = set_config.get("name", "")
+        if actual_name != expected_name:
+            errors.append(f"  {filename}: name mismatch: file is '{expected_name}' but name field is '{actual_name}'")
+
         # Cross-validate: stow packages exist in catalog
         for pkg in set_config.get("stow_packages", []):
             if pkg not in valid_stow:

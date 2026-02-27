@@ -34,6 +34,31 @@ setup() {
     assert_output --partial "Invalid option"
 }
 
+# --- Dynamic set discovery ---
+
+@test "parse_args help shows available sets dynamically" {
+    run parse_args --help
+    assert_output --partial "Available sets:"
+    assert_output --partial "server"
+    assert_output --partial "workstation"
+}
+
+@test "parse_args --list returns 1 and shows sets" {
+    run parse_args --list
+    [ "$status" -eq 1 ]
+    assert_output --partial "Available sets:"
+    assert_output --partial "server"
+}
+
+@test "parse_args accepts all discovered sets" {
+    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --list-sets)"
+    for set_name in "${AVAILABLE_SETS[@]}"; do
+        run parse_args "$set_name"
+        # Should be 0 (success) or 3 (platform skip), not 2 (invalid)
+        [[ "$status" -eq 0 ]] || [[ "$status" -eq 3 ]]
+    done
+}
+
 # --- Mode setting ---
 
 @test "parse_args iot sets MODE to iot" {
