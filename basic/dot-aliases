@@ -3,4 +3,8 @@ alias ls="eza --color=always --icons=always"
 alias vim="nvim"
 alias zshconfig="nvim ~/.zshrc"
 alias ohmyzsh="nvim ~/.oh-my-zsh"
-# alias cd="z"
+
+# alias code to VSCode if installed
+if [[ -x /usr/local/bin/code ]]; then
+  alias code='/usr/local/bin/code'
+fi
