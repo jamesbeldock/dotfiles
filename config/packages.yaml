@@ -135,14 +135,18 @@ groups:
       - name: flux-app
 
 stow_packages:
+  - atuin
   - basic
   - config resources
   - fastfetch
   - git
   - iterm2
+  - karabiner
   - nvim
   - oh-my-zsh
+  - ssh
   - starship
   - tmux
+  - vim
   - wezterm
   - zsh
