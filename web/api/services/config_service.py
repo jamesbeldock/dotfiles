@@ -8,6 +8,8 @@ from typing import Any
 import jsonschema
 import yaml
 
+from services.validation import validate_name
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 CONFIG_DIR = PROJECT_ROOT / "config"
 SETS_DIR = CONFIG_DIR / "sets"
@@ -54,6 +56,7 @@ def list_sets() -> list[dict]:
 
 
 def load_set(name: str) -> dict:
+    validate_name(name, "set name")
     path = SETS_DIR / f"{name}.yaml"
     if not path.exists():
         raise FileNotFoundError(f"Set '{name}' not found")
@@ -61,11 +64,13 @@ def load_set(name: str) -> dict:
 
 
 def save_set(name: str, data: dict) -> None:
+    validate_name(name, "set name")
     data["name"] = name
     save_yaml(SETS_DIR / f"{name}.yaml", data)
 
 
 def delete_set(name: str) -> None:
+    validate_name(name, "set name")
     path = SETS_DIR / f"{name}.yaml"
     if not path.exists():
         raise FileNotFoundError(f"Set '{name}' not found")

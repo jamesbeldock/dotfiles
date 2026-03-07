@@ -47,7 +47,7 @@ export const stow = {
   createPackage: (name: string) =>
     request<any>('/stow/packages', { method: 'POST', body: JSON.stringify({ name }) }),
   deletePackage: (name: string) =>
-    request<any>(`/stow/packages/${encodeURIComponent(name)}`, { method: 'DELETE' }),
+    request<any>(`/stow/packages/${name}`, { method: 'DELETE' }),
   files: (pkg: string) =>
     request<{ name: string; files: any[] }>(`/stow/packages/${encodeURIComponent(pkg)}/files`),
   readFile: (pkg: string, path: string) =>

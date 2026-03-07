@@ -20,15 +20,19 @@ class PackageCreate(BaseModel):
 def create_package(body: PackageCreate):
     try:
         stow_service.create_package(body.name)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     except FileExistsError as e:
         raise HTTPException(409, str(e))
     return {"created": body.name}
 
 
-@router.delete("/packages/{name:path}")
+@router.delete("/packages/{name}")
 def delete_package(name: str):
     try:
         stow_service.delete_package(name)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     except FileNotFoundError as e:
         raise HTTPException(404, str(e))
     except PermissionError as e:
@@ -36,15 +40,17 @@ def delete_package(name: str):
     return {"deleted": name}
 
 
-@router.get("/packages/{name:path}/files")
+@router.get("/packages/{name}/files")
 def list_files(name: str):
     try:
         return {"name": name, "files": stow_service.list_files(name)}
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     except FileNotFoundError as e:
         raise HTTPException(404, str(e))
 
 
-@router.get("/packages/{name:path}/files/{file_path:path}")
+@router.get("/packages/{name}/files/{file_path:path}")
 def read_file(name: str, file_path: str):
     try:
         content = stow_service.read_file(name, file_path)
@@ -59,7 +65,7 @@ class FileWrite(BaseModel):
     content: str
 
 
-@router.put("/packages/{name:path}/files/{file_path:path}")
+@router.put("/packages/{name}/files/{file_path:path}")
 def write_file(name: str, file_path: str, body: FileWrite):
     try:
         stow_service.write_file(name, file_path, body.content)
@@ -70,7 +76,7 @@ def write_file(name: str, file_path: str, body: FileWrite):
     return {"path": file_path, "written": True}
 
 
-@router.delete("/packages/{name:path}/files/{file_path:path}")
+@router.delete("/packages/{name}/files/{file_path:path}")
 def delete_file(name: str, file_path: str):
     try:
         stow_service.delete_file(name, file_path)

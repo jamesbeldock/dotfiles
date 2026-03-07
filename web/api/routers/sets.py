@@ -27,6 +27,8 @@ def compare_sets(sets: str = Query(..., description="Comma-separated set names")
 def get_set(name: str):
     try:
         return config_service.load_set(name)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     except FileNotFoundError:
         raise HTTPException(404, f"Set '{name}' not found")
 
@@ -35,6 +37,8 @@ def get_set(name: str):
 def get_resolved_set(name: str):
     try:
         return config_service.resolve_set(name)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     except FileNotFoundError:
         raise HTTPException(404, f"Set '{name}' not found")
 
@@ -49,18 +53,21 @@ class SetCreate(BaseModel):
 
 @router.post("/")
 def create_set(body: SetCreate):
-    existing = [s["name"] for s in config_service.list_sets()]
-    if body.name in existing:
-        raise HTTPException(409, f"Set '{body.name}' already exists")
+    try:
+        existing = [s["name"] for s in config_service.list_sets()]
+        if body.name in existing:
+            raise HTTPException(409, f"Set '{body.name}' already exists")
 
-    data = {"name": body.name, "description": body.description, "stow_packages": body.stow_packages}
-    if body.linux:
-        data["linux"] = body.linux
-    if body.macos:
-        data["macos"] = body.macos
+        data = {"name": body.name, "description": body.description, "stow_packages": body.stow_packages}
+        if body.linux:
+            data["linux"] = body.linux
+        if body.macos:
+            data["macos"] = body.macos
 
-    config_service.save_set(body.name, data)
-    return data
+        config_service.save_set(body.name, data)
+        return data
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
 
 class SetUpdate(BaseModel):
@@ -74,6 +81,8 @@ class SetUpdate(BaseModel):
 def update_set(name: str, body: SetUpdate):
     try:
         existing = config_service.load_set(name)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     except FileNotFoundError:
         raise HTTPException(404, f"Set '{name}' not found")
 
@@ -94,6 +103,8 @@ def update_set(name: str, body: SetUpdate):
 def delete_set(name: str):
     try:
         config_service.delete_set(name)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     except FileNotFoundError:
         raise HTTPException(404, f"Set '{name}' not found")
     return {"deleted": name}

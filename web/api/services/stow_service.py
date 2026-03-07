@@ -1,14 +1,28 @@
 """Service for filesystem operations on stow package directories."""
-import os
 import shutil
 from pathlib import Path
 
 from services.config_service import PROJECT_ROOT, load_catalog, save_catalog
+from services.validation import validate_name, MAX_FILE_SIZE
 
 # Directories at the project root that are NOT stow packages
 NON_STOW_DIRS = {
     ".claude", ".git", ".github", "config", "test", "tools", "web",
 }
+
+
+def _safe_resolve(base: Path, user_path: str) -> Path:
+    """Resolve a user-provided path and ensure it stays within base directory.
+
+    Raises ValueError if the resolved path escapes the base directory.
+    """
+    full_path = (base / user_path).resolve()
+    base_resolved = base.resolve()
+    try:
+        full_path.relative_to(base_resolved)
+    except ValueError:
+        raise ValueError(f"Path '{user_path}' escapes the allowed directory")
+    return full_path
 
 
 def compute_target(rel_path: str) -> str:
@@ -51,6 +65,7 @@ def list_packages() -> list[dict]:
 
 def create_package(name: str) -> None:
     """Create a new stow package directory and add it to the catalog."""
+    validate_name(name, "package name")
     pkg_dir = PROJECT_ROOT / name
     if pkg_dir.exists():
         raise FileExistsError(f"Directory '{name}' already exists")
@@ -67,6 +82,7 @@ def create_package(name: str) -> None:
 
 def delete_package(name: str) -> None:
     """Delete a stow package directory and remove it from the catalog."""
+    validate_name(name, "package name")
     pkg_dir = PROJECT_ROOT / name
     if not pkg_dir.exists():
         raise FileNotFoundError(f"Package '{name}' not found")
@@ -85,6 +101,7 @@ def delete_package(name: str) -> None:
 
 def list_files(package_name: str) -> list[dict]:
     """List all files in a stow package with their target paths."""
+    validate_name(package_name, "package name")
     pkg_dir = PROJECT_ROOT / package_name
     if not pkg_dir.exists():
         raise FileNotFoundError(f"Package '{package_name}' not found")
@@ -103,38 +120,42 @@ def list_files(package_name: str) -> list[dict]:
 
 def read_file(package_name: str, file_path: str) -> str:
     """Read a file's contents from a stow package."""
-    full_path = PROJECT_ROOT / package_name / file_path
+    validate_name(package_name, "package name")
+    pkg_dir = PROJECT_ROOT / package_name
+    full_path = _safe_resolve(pkg_dir, file_path)
     if not full_path.exists():
         raise FileNotFoundError(f"File not found: {package_name}/{file_path}")
-    # Ensure path doesn't escape the package directory
-    full_path.resolve().relative_to((PROJECT_ROOT / package_name).resolve())
     return full_path.read_text(errors="replace")
 
 
 def write_file(package_name: str, file_path: str, content: str) -> None:
     """Create or update a file in a stow package."""
+    validate_name(package_name, "package name")
+    if len(content) > MAX_FILE_SIZE:
+        raise ValueError(f"File content exceeds maximum size of {MAX_FILE_SIZE} bytes")
+
     pkg_dir = PROJECT_ROOT / package_name
     if not pkg_dir.exists():
         raise FileNotFoundError(f"Package '{package_name}' not found")
 
-    full_path = pkg_dir / file_path
-    # Ensure path doesn't escape the package directory
-    full_path.resolve().relative_to(pkg_dir.resolve())
+    full_path = _safe_resolve(pkg_dir, file_path)
     full_path.parent.mkdir(parents=True, exist_ok=True)
     full_path.write_text(content)
 
 
 def delete_file(package_name: str, file_path: str) -> None:
     """Delete a file from a stow package."""
-    full_path = PROJECT_ROOT / package_name / file_path
+    validate_name(package_name, "package name")
+    pkg_dir = PROJECT_ROOT / package_name
+    full_path = _safe_resolve(pkg_dir, file_path)
     if not full_path.exists():
         raise FileNotFoundError(f"File not found: {package_name}/{file_path}")
-    full_path.resolve().relative_to((PROJECT_ROOT / package_name).resolve())
     full_path.unlink()
 
     # Clean up empty parent directories
     parent = full_path.parent
-    while parent != PROJECT_ROOT / package_name:
+    pkg_resolved = pkg_dir.resolve()
+    while parent != pkg_resolved:
         if not any(parent.iterdir()):
             parent.rmdir()
             parent = parent.parent
