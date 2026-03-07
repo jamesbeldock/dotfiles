@@ -61,9 +61,16 @@ def list_sets(config_dir):
 
 
 def check_platform_support(config_dir, set_name, platform):
-    """Check if a set has configuration for a given platform."""
+    """Check if a set has non-empty configuration for a given platform."""
     set_config = load_set_config(config_dir, set_name)
-    return platform in set_config
+    plat_config = set_config.get(platform)
+    if not plat_config or not isinstance(plat_config, dict):
+        return False
+    # Check if any group lists are non-empty
+    return any(
+        isinstance(v, list) and len(v) > 0
+        for v in plat_config.values()
+    )
 
 
 def format_bash_array(var_name, values):
