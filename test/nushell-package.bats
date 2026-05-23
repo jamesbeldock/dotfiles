@@ -82,6 +82,10 @@ setup() {
     ! grep -qE '^alias cat\s*=' "$CONFIG_NU"
 }
 
+@test "config.nu suppresses nu's startup banner" {
+    grep -qE '\$env\.config\.show_banner\s*=\s*false' "$CONFIG_NU"
+}
+
 @test "config.nu runs fastfetch on interactive startup" {
     grep -q 'fastfetch' "$CONFIG_NU"
     # Must be guarded by interactive check

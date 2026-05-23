@@ -12,6 +12,9 @@ if $nu.is-interactive {
     }
 }
 
+# Suppress nu's startup banner; fastfetch below is the only intended greeting.
+$env.config.show_banner = false
+
 # Aliases
 alias vim = nvim
 alias nuconfig = nvim $nu.config-path
