@@ -259,6 +259,32 @@ load_packages() {
     assert_array_not_contains PACKAGE "iterm2"
 }
 
+# --- Nushell wiring ---
+
+@test "nushell is in workstation stow output" {
+    load_packages --set workstation --type stow
+    assert_array_contains PACKAGE "nushell"
+}
+
+@test "nushell formula is in macos workstation formulae (via james_tools)" {
+    load_packages --set workstation --platform macos --type formulae
+    assert_array_contains FORMULAE_TO_INSTALL "nushell"
+}
+
+@test "nushell formula is in linux workstation packages (via james_tools)" {
+    load_packages --set workstation --platform linux
+    assert_array_contains PACKAGES_TO_INSTALL "nushell"
+}
+
+@test "nushell is NOT in server/iot/lxc stow output (workstation-only)" {
+    load_packages --set server --type stow
+    assert_array_not_contains PACKAGE "nushell"
+    load_packages --set iot --type stow
+    assert_array_not_contains PACKAGE "nushell"
+    load_packages --set lxc --type stow
+    assert_array_not_contains PACKAGE "nushell"
+}
+
 @test "stow lxc matches iot" {
     load_packages --set iot --type stow
     local iot_packages=("${PACKAGE[@]}")
