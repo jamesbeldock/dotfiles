@@ -5,21 +5,40 @@
 
 # Run this script first of all. It will run the others.
 
-# parse_args: sets MODE. Returns 0 on success, 1 for help, 2 for invalid arg.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/tools/discover_sets.sh"
+
+# parse_args: sets MODE. Returns 0 on success, 1 for help/list, 2 for invalid arg.
 parse_args() {
-	if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]] || [[ -z "$1" ]]; then
-		echo "Usage: bootstrap.sh [--help|-h] server|workstation|iot"
-		echo "This script bootstraps a new machine by installing packages and stowing dotfiles."
-		echo "server, workstation, and iot are predefined sets of packages."
+	if [[ "$1" == "--list" ]]; then
+		discover_sets "$SCRIPT_DIR" || return 2
+		echo "Available sets: ${AVAILABLE_SETS[*]}"
 		return 1
-	elif [[ "$1" = "server" ]] || [[ "$1" == "workstation" ]] || [[ "$1" == "iot" ]]; then
-		MODE="$1"
-		return 0
-	else
+	fi
+
+	if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]] || [[ -z "$1" ]]; then
+		discover_sets "$SCRIPT_DIR" || return 2
+		echo "Usage: bootstrap.sh [--help|-h|--list] <set>"
+		echo "This script bootstraps a new machine by installing packages and stowing dotfiles."
+		echo "Available sets: ${AVAILABLE_SETS[*]}"
+		return 1
+	fi
+
+	discover_sets "$SCRIPT_DIR" || return 2
+
+	if ! is_valid_set "$1"; then
 		echo "Invalid option: $1"
-		echo "Usage: bootstrap.sh [--help|-h] server|workstation|iot"
+		echo "Available sets: ${AVAILABLE_SETS[*]}"
 		return 2
 	fi
+
+	if ! validate_configs "$SCRIPT_DIR"; then
+		echo "Config validation failed. Aborting." >&2
+		return 2
+	fi
+
+	MODE="$1"
+	return 0
 }
 
 # detect_os: sets OS_TYPE to "darwin" or "linux". Returns 1 if unknown.

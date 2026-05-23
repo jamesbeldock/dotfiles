@@ -1,160 +1,46 @@
 #! /bin/bash
 
-GNU_CORE_UTILS=(
-	"coreutils"
-	"moreutils" # Install some other useful utilities like `sponge`
-	"findutils" # Install GNU `find`, `locate`, `updatedb`, and `xargs`, `g`-prefixed
-	"bash"      # Install a modern version of Bash
-	"bash-completion2"
-	"wget"
-	"gnu-sed"
-	"stow"
-)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/tools/discover_sets.sh"
 
-BASIC_TOOLS=(
-	"grep"
-	"openssh"
-	"screen"
-	"php"
-	"gmp"
-	"vim"
-	"gnupg"
-)
-
-# Network and security tools
-NETWORK_SECURITY_TOOLS=(
-	"dns2tcp"
-	"knock"
-	"netpbm"
-	"nmap"
-	"pngcheck"
-	"socat"
-	"sqlmap"
-	"tcptrace"
-	"xpdf"
-	"xz"
-)
-
-# Install other useful binaries.
-GENERAL_UTILITIES=(
-    "ack"
-    "git"
-    "git-lfs"
-    "gs"
-    "lua"
-    "lynx"
-    "p7zip"
-    "pigz"
-    "pv"
-    "rename"
-    "rlwrap"
-    "ssh-copy-id"
-    "tree"
-    "vbindiff"
-    "zopfli"
-)
-
-# James's preferred development tools
-JAMES_TOOLS=(
-    "bat"
-    "zsh"
-    "fzf"
-    "luarocks"
-    "gh"
-    "pandoc"
-    "ripgrep"
-    "tmux"
-    "mosh"
-    "atuin"
-    "eza"
-    "fd"
-    "python3"
-    "neovim"
-    "broot"
-    "bottom"
-    "git-delta"
-    "uv"
-    "thefuck"
-    "mtr"
-    "htop"
-    "tpm"
-    "yazi"
-    "stow"
-    "ruby"
-    'tldr'
-    "fastfetch"
-)
-
-# LXC-specific tools
-LXC_TOOLS=(
-    "git"
-    "git-lfs"
-    "lua"
-    "gh"
-    "ssh-copy-id"
-    "bat"
-    "zsh"
-    "tmux"
-    "mosh"
-    "atuin"
-    "neovim"
-    "stow"
-    "fastfetch"
-)
-
-# Font installations
-NERD_FONTS=(
-    "font-jetbrains-mono-nerd-font"
-    "font-fira-code-nerd-font"
-)
-
-# parse_args: sets MODE and PACKAGES_TO_INSTALL.
-# Returns 0 on success, 1 for help, 2 for invalid arg.
+# parse_args: sets MODE and PACKAGES_TO_INSTALL from YAML config.
+# Returns 0 on success, 1 for help/list, 2 for invalid arg, 3 for platform skip.
 parse_args() {
-    if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ -z "$1" ] ; then
-        echo "Usage: linux-apt-package-install.sh [--help|-h] server|workstation|iot|lxc"
-        echo "  iot:         Basic tools, Core utils, and James's tools (tmux, zsh, etc.)"
-        echo "  lxc:         Minimal tools, Core utils, and James's tools (tmux, zsh, etc.)"
-        echo "  server:      IoT + Network/Security tools + General utilities (git, etc.)"
-        echo "  workstation: Server + Fonts"
+    if [ "$1" = "--list" ]; then
+        discover_sets "$SCRIPT_DIR" || return 2
+        echo "Available sets: ${AVAILABLE_SETS[*]}"
         return 1
-    elif [ "$1" = "iot" ]; then
-        MODE="iot"
-        PACKAGES_TO_INSTALL=(
-            "${GNU_CORE_UTILS[@]}"
-            "${BASIC_TOOLS[@]}"
-            "${JAMES_TOOLS[@]}"
-        )
-    elif [ "$1" = "lxc" ]; then
-        MODE="lxc"
-        PACKAGES_TO_INSTALL=(
-            "${GNU_CORE_UTILS[@]}"
-            "${BASIC_TOOLS[@]}"
-            "${LXC_TOOLS[@]}"
-        )
-    elif [ "$1" = "server" ]; then
-        MODE="server"
-        PACKAGES_TO_INSTALL=(
-            "${GNU_CORE_UTILS[@]}"
-            "${BASIC_TOOLS[@]}"
-            "${JAMES_TOOLS[@]}"
-            "${NETWORK_SECURITY_TOOLS[@]}"
-            "${GENERAL_UTILITIES[@]}"
-        )
-    elif [ "$1" = "workstation" ]; then
-        MODE="workstation"
-        PACKAGES_TO_INSTALL=(
-            "${GNU_CORE_UTILS[@]}"
-            "${BASIC_TOOLS[@]}"
-            "${JAMES_TOOLS[@]}"
-            "${NETWORK_SECURITY_TOOLS[@]}"
-            "${GENERAL_UTILITIES[@]}"
-            "${NERD_FONTS[@]}"
-        )
-    else
+    fi
+
+    if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ -z "$1" ]; then
+        discover_sets "$SCRIPT_DIR" || return 2
+        echo "Usage: linux-apt-package-install.sh [--help|-h|--list] <set>"
+        echo "Available sets: ${AVAILABLE_SETS[*]}"
+        return 1
+    fi
+
+    discover_sets "$SCRIPT_DIR" || return 2
+
+    if ! is_valid_set "$1"; then
         echo "Invalid option: $1"
+        echo "Available sets: ${AVAILABLE_SETS[*]}"
         return 2
     fi
+
+    # Check this set has linux config
+    check_set_platform "$SCRIPT_DIR" "$1" "linux"
+    if [ "$HAS_PLATFORM" != "true" ]; then
+        echo "Set '$1' has no Linux package configuration. Nothing to install."
+        return 3
+    fi
+
+    if ! validate_configs "$SCRIPT_DIR"; then
+        echo "Config validation failed. Aborting." >&2
+        return 2
+    fi
+
+    MODE="$1"
+    eval "$(python3 "$SCRIPT_DIR/tools/load_config.py" --set "$MODE" --platform linux)"
     return 0
 }
 
@@ -196,6 +82,7 @@ main() {
     local rc=$?
     if [ $rc -eq 1 ]; then exit 0; fi
     if [ $rc -eq 2 ]; then exit 1; fi
+    if [ $rc -eq 3 ]; then exit 0; fi
     detect_privilege
     execute_install
 }

@@ -1,5 +1,7 @@
 #! /bin/bash
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/tools/discover_sets.sh"
 # Install GNU core utilities (those that come with macOS are outdated).
 # Don't forget to add `$(brew --prefix coreutils)/libexec/gnubin` to `$PATH`.
 GNU_CORE_UTILS=(
@@ -130,45 +132,45 @@ ensure_brew() {
 	BREW_PREFIX=$(brew --prefix)
 }
 
-# parse_args: sets MODE, FORMULAE_TO_INSTALL, CASKS_TO_INSTALL.
-# Returns 0 on success, 1 for help, 2 for invalid arg, 3 for iot early exit.
+# parse_args: sets MODE, FORMULAE_TO_INSTALL, CASKS_TO_INSTALL from YAML config.
+# Returns 0 on success, 1 for help/list, 2 for invalid arg, 3 for platform skip.
 parse_args() {
-	if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ -z "$1" ]; then
-		echo "Usage: osx-package-install.sh [--help|-h] server|workstation|iot"
-		echo "  iot:         Core utils, Basic tools, and James's tools"
-		echo "  server:      IoT + Network/Security tools + General utilities"
-		echo "  workstation: Server + Fonts + Cask apps"
+	if [ "$1" = "--list" ]; then
+		discover_sets "$SCRIPT_DIR" || return 2
+		echo "Available sets: ${AVAILABLE_SETS[*]}"
 		return 1
-	elif [ "$1" = "iot" ]; then
-		echo "IoT profile is not applicable on macOS. Skipping package installation."
-		return 3
-	elif [ "$1" = "server" ]; then
-		MODE="server"
-		FORMULAE_TO_INSTALL=(
-			"${GNU_CORE_UTILS[@]}"
-			"${BASIC_TOOLS[@]}"
-			"${JAMES_TOOLS[@]}"
-			"${NETWORK_SECURITY_TOOLS[@]}"
-			"${GENERAL_UTILITIES[@]}"
-		)
-		CASKS_TO_INSTALL=()
-	elif [ "$1" = "workstation" ]; then
-		MODE="workstation"
-		FORMULAE_TO_INSTALL=(
-			"${GNU_CORE_UTILS[@]}"
-			"${BASIC_TOOLS[@]}"
-			"${JAMES_TOOLS[@]}"
-			"${NETWORK_SECURITY_TOOLS[@]}"
-			"${GENERAL_UTILITIES[@]}"
-		)
-		CASKS_TO_INSTALL=(
-			"${NERD_FONTS[@]}"
-			"${CASK_APPS[@]}"
-		)
-	else
+	fi
+
+	if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ -z "$1" ]; then
+		discover_sets "$SCRIPT_DIR" || return 2
+		echo "Usage: osx-package-install.sh [--help|-h|--list] <set>"
+		echo "Available sets: ${AVAILABLE_SETS[*]}"
+		return 1
+	fi
+
+	discover_sets "$SCRIPT_DIR" || return 2
+
+	if ! is_valid_set "$1"; then
 		echo "Invalid option: $1"
+		echo "Available sets: ${AVAILABLE_SETS[*]}"
 		return 2
 	fi
+
+	# Check if this set supports macOS
+	check_set_platform "$SCRIPT_DIR" "$1" "macos"
+	if [ "$HAS_PLATFORM" != "true" ]; then
+		echo "Set '$1' is not applicable on macOS (no macos configuration). Skipping."
+		return 3
+	fi
+
+	if ! validate_configs "$SCRIPT_DIR"; then
+		echo "Config validation failed. Aborting." >&2
+		return 2
+	fi
+
+	MODE="$1"
+	eval "$(python3 "$SCRIPT_DIR/tools/load_config.py" --set "$MODE" --platform macos --type formulae)"
+	eval "$(python3 "$SCRIPT_DIR/tools/load_config.py" --set "$MODE" --platform macos --type casks)"
 	return 0
 }
 

@@ -20,7 +20,20 @@
       "Bash(/bin/ls test/libs/)",
       "Bash(git add .gitmodules test/libs/bats-core test/libs/bats-support test/libs/bats-assert)",
       "Bash(git commit:*)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(git merge add-unit-tests)",
+      "Bash(git stash --include-untracked)",
+      "Bash(git -C oh-my-zsh/dot-oh-my-zsh remote -v)",
+      "Bash(git add .gitmodules)",
+      "Bash(git -C oh-my-zsh/dot-oh-my-zsh log --oneline -3)",
+      "Bash(git checkout -b web-set-editor)",
+      "Bash(pip3 install pyyaml jsonschema)",
+      "Bash(pip3 install --user pyyaml jsonschema)",
+      "Bash(python3 -c \"import yaml; import jsonschema; print\\(''OK''\\)\")",
+      "Bash(uv pip install pyyaml jsonschema)",
+      "Bash(pip3 install --break-system-packages pyyaml jsonschema)",
+      "Bash(python3 tools/validate_config.py)",
+      "Bash(python3 tools/verify_transition.py)"
     ]
   }
 }

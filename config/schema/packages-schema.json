@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Package Catalog",
+  "description": "Master catalog of all package groups and stow packages",
+  "type": "object",
+  "required": ["groups", "stow_packages"],
+  "additionalProperties": false,
+  "properties": {
+    "groups": {
+      "type": "object",
+      "description": "Map of group names to group definitions",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["description", "packages"],
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string",
+            "enum": ["macos_only", "linux_only"]
+          },
+          "install_type": {
+            "type": "string",
+            "enum": ["cask", "formula"]
+          },
+          "platform_overrides": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "macos": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "extra_packages": {
+                    "type": "array",
+                    "items": { "$ref": "#/$defs/package_entry" }
+                  }
+                }
+              },
+              "linux": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "extra_packages": {
+                    "type": "array",
+                    "items": { "$ref": "#/$defs/package_entry" }
+                  }
+                }
+              }
+            }
+          },
+          "packages": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/package_entry" }
+          }
+        }
+      }
+    },
+    "stow_packages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Master list of all available stow packages"
+    }
+  },
+  "$defs": {
+    "package_entry": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Package name"
+        },
+        "version": {
+          "type": "string",
+          "description": "Optional version pin (defaults to latest)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional description or note"
+        }
+      }
+    }
+  }
+}

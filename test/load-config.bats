@@ -1,0 +1,299 @@
+#!/usr/bin/env bats
+
+setup() {
+    load test_helper
+}
+
+# Helper to load config output into a bash array
+load_packages() {
+    eval "$(python3 "${PROJECT_ROOT}/tools/load_config.py" "$@")"
+}
+
+# --- list-sets ---
+
+@test "load_config.py --list-sets outputs AVAILABLE_SETS array" {
+    load_packages --list-sets
+    assert_array_contains AVAILABLE_SETS "server"
+    assert_array_contains AVAILABLE_SETS "workstation"
+    assert_array_contains AVAILABLE_SETS "iot"
+    assert_array_contains AVAILABLE_SETS "lxc"
+}
+
+@test "load_config.py --list-sets count matches yaml files" {
+    load_packages --list-sets
+    local file_count
+    file_count=$(command ls "$PROJECT_ROOT/config/sets/"*.yaml 2>/dev/null | wc -l | tr -d ' ')
+    assert_array_length AVAILABLE_SETS "$file_count"
+}
+
+@test "load_config.py --list-sets with empty dir returns empty array" {
+    local tmpdir
+    tmpdir="$(mktemp -d)"
+    mkdir -p "$tmpdir/sets"
+    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --list-sets --config-dir "$tmpdir")"
+    assert_array_length AVAILABLE_SETS 0
+    rm -rf "$tmpdir"
+}
+
+# --- check-platform ---
+
+@test "load_config.py --check-platform macos for server returns true" {
+    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --set server --check-platform macos)"
+    assert_equal "$HAS_PLATFORM" "true"
+}
+
+@test "load_config.py --check-platform macos for iot returns false" {
+    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --set iot --check-platform macos)"
+    assert_equal "$HAS_PLATFORM" "false"
+}
+
+@test "load_config.py --check-platform macos for lxc returns false" {
+    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --set lxc --check-platform macos)"
+    assert_equal "$HAS_PLATFORM" "false"
+}
+
+@test "load_config.py --check-platform linux for iot returns true" {
+    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --set iot --check-platform linux)"
+    assert_equal "$HAS_PLATFORM" "true"
+}
+
+@test "load_config.py --check-platform linux for workstation returns true" {
+    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --set workstation --check-platform linux)"
+    assert_equal "$HAS_PLATFORM" "true"
+}
+
+# --- Linux IoT ---
+
+@test "linux iot includes gnu_core_utils packages" {
+    load_packages --set iot --platform linux
+    assert_array_contains PACKAGES_TO_INSTALL "coreutils"
+    assert_array_contains PACKAGES_TO_INSTALL "stow"
+    assert_array_contains PACKAGES_TO_INSTALL "bash"
+    assert_array_contains PACKAGES_TO_INSTALL "wget"
+}
+
+@test "linux iot includes basic_tools packages" {
+    load_packages --set iot --platform linux
+    assert_array_contains PACKAGES_TO_INSTALL "grep"
+    assert_array_contains PACKAGES_TO_INSTALL "vim"
+    assert_array_contains PACKAGES_TO_INSTALL "openssh"
+}
+
+@test "linux iot includes james_tools packages" {
+    load_packages --set iot --platform linux
+    assert_array_contains PACKAGES_TO_INSTALL "bat"
+    assert_array_contains PACKAGES_TO_INSTALL "neovim"
+    assert_array_contains PACKAGES_TO_INSTALL "zsh"
+    assert_array_contains PACKAGES_TO_INSTALL "fzf"
+    assert_array_contains PACKAGES_TO_INSTALL "tmux"
+}
+
+@test "linux iot does NOT include network_security_tools" {
+    load_packages --set iot --platform linux
+    assert_array_not_contains PACKAGES_TO_INSTALL "nmap"
+    assert_array_not_contains PACKAGES_TO_INSTALL "sqlmap"
+}
+
+# --- Linux LXC ---
+
+@test "linux lxc includes gnu_core_utils packages" {
+    load_packages --set lxc --platform linux
+    assert_array_contains PACKAGES_TO_INSTALL "coreutils"
+    assert_array_contains PACKAGES_TO_INSTALL "stow"
+}
+
+@test "linux lxc includes basic_tools packages" {
+    load_packages --set lxc --platform linux
+    assert_array_contains PACKAGES_TO_INSTALL "grep"
+    assert_array_contains PACKAGES_TO_INSTALL "vim"
+}
+
+@test "linux lxc includes lxc_tools packages" {
+    load_packages --set lxc --platform linux
+    assert_array_contains PACKAGES_TO_INSTALL "git"
+    assert_array_contains PACKAGES_TO_INSTALL "neovim"
+    assert_array_contains PACKAGES_TO_INSTALL "fastfetch"
+    assert_array_contains PACKAGES_TO_INSTALL "tmux"
+}
+
+@test "linux lxc does NOT include james_tools-only items" {
+    load_packages --set lxc --platform linux
+    assert_array_not_contains PACKAGES_TO_INSTALL "broot"
+    assert_array_not_contains PACKAGES_TO_INSTALL "yazi"
+    assert_array_not_contains PACKAGES_TO_INSTALL "thefuck"
+}
+
+# --- Linux Server ---
+
+@test "linux server includes all expected groups" {
+    load_packages --set server --platform linux
+    # gnu_core_utils
+    assert_array_contains PACKAGES_TO_INSTALL "coreutils"
+    # basic_tools
+    assert_array_contains PACKAGES_TO_INSTALL "grep"
+    # james_tools
+    assert_array_contains PACKAGES_TO_INSTALL "bat"
+    # network_security_tools
+    assert_array_contains PACKAGES_TO_INSTALL "nmap"
+    # general_utilities
+    assert_array_contains PACKAGES_TO_INSTALL "tree"
+}
+
+@test "linux server does NOT include nerd_fonts" {
+    load_packages --set server --platform linux
+    assert_array_not_contains PACKAGES_TO_INSTALL "font-jetbrains-mono-nerd-font"
+}
+
+# --- Linux Workstation ---
+
+@test "linux workstation includes everything including nerd_fonts" {
+    load_packages --set workstation --platform linux
+    assert_array_contains PACKAGES_TO_INSTALL "coreutils"
+    assert_array_contains PACKAGES_TO_INSTALL "grep"
+    assert_array_contains PACKAGES_TO_INSTALL "bat"
+    assert_array_contains PACKAGES_TO_INSTALL "nmap"
+    assert_array_contains PACKAGES_TO_INSTALL "tree"
+    assert_array_contains PACKAGES_TO_INSTALL "font-jetbrains-mono-nerd-font"
+    assert_array_contains PACKAGES_TO_INSTALL "font-fira-code-nerd-font"
+}
+
+@test "linux workstation is superset of server" {
+    load_packages --set server --platform linux
+    local server_packages=("${PACKAGES_TO_INSTALL[@]}")
+
+    load_packages --set workstation --platform linux
+    for pkg in "${server_packages[@]}"; do
+        assert_array_contains PACKAGES_TO_INSTALL "$pkg"
+    done
+}
+
+# --- macOS Server ---
+
+@test "macos server formulae include expected groups" {
+    load_packages --set server --platform macos --type formulae
+    # gnu_core_utils
+    assert_array_contains FORMULAE_TO_INSTALL "coreutils"
+    # basic_tools
+    assert_array_contains FORMULAE_TO_INSTALL "grep"
+    # james_tools (includes starship on macOS)
+    assert_array_contains FORMULAE_TO_INSTALL "bat"
+    assert_array_contains FORMULAE_TO_INSTALL "starship"
+    # network_security_tools
+    assert_array_contains FORMULAE_TO_INSTALL "nmap"
+    # general_utilities
+    assert_array_contains FORMULAE_TO_INSTALL "git"
+}
+
+@test "macos server casks are empty" {
+    load_packages --set server --platform macos --type casks
+    assert_array_length CASKS_TO_INSTALL 0
+}
+
+# --- macOS Workstation ---
+
+@test "macos workstation formulae match server" {
+    load_packages --set server --platform macos --type formulae
+    local server_formulae=("${FORMULAE_TO_INSTALL[@]}")
+
+    load_packages --set workstation --platform macos --type formulae
+    for pkg in "${server_formulae[@]}"; do
+        assert_array_contains FORMULAE_TO_INSTALL "$pkg"
+    done
+}
+
+@test "macos workstation casks include nerd_fonts and cask_apps" {
+    load_packages --set workstation --platform macos --type casks
+    assert_array_contains CASKS_TO_INSTALL "font-jetbrains-mono-nerd-font"
+    assert_array_contains CASKS_TO_INSTALL "font-fira-code-nerd-font"
+    assert_array_contains CASKS_TO_INSTALL "iterm2"
+    assert_array_contains CASKS_TO_INSTALL "wezterm"
+    assert_array_contains CASKS_TO_INSTALL "docker"
+    assert_array_contains CASKS_TO_INSTALL "1password"
+}
+
+@test "macos workstation cask count is 14 (2 fonts + 12 apps)" {
+    load_packages --set workstation --platform macos --type casks
+    assert_array_length CASKS_TO_INSTALL 14
+}
+
+# --- Stow packages ---
+
+@test "stow workstation has 12 packages" {
+    load_packages --set workstation --type stow
+    assert_array_contains PACKAGE "basic"
+    assert_array_contains PACKAGE "config resources"
+    assert_array_contains PACKAGE "iterm2"
+    assert_array_contains PACKAGE "nushell"
+    assert_array_contains PACKAGE "oh-my-zsh"
+    assert_array_contains PACKAGE "wezterm"
+    assert_array_length PACKAGE 12
+}
+
+@test "stow server has 8 packages" {
+    load_packages --set server --type stow
+    assert_array_contains PACKAGE "basic"
+    assert_array_contains PACKAGE "git"
+    assert_array_contains PACKAGE "starship"
+    assert_array_length PACKAGE 8
+}
+
+@test "stow server does NOT contain workstation-only items" {
+    load_packages --set server --type stow
+    assert_array_not_contains PACKAGE "iterm2"
+    assert_array_not_contains PACKAGE "wezterm"
+    assert_array_not_contains PACKAGE "oh-my-zsh"
+}
+
+@test "stow iot has 6 packages" {
+    load_packages --set iot --type stow
+    assert_array_contains PACKAGE "basic"
+    assert_array_contains PACKAGE "nvim"
+    assert_array_contains PACKAGE "tmux"
+    assert_array_length PACKAGE 6
+}
+
+@test "stow iot does NOT contain server/workstation items" {
+    load_packages --set iot --type stow
+    assert_array_not_contains PACKAGE "git"
+    assert_array_not_contains PACKAGE "starship"
+    assert_array_not_contains PACKAGE "iterm2"
+}
+
+# --- Nushell wiring ---
+
+@test "nushell is in workstation stow output" {
+    load_packages --set workstation --type stow
+    assert_array_contains PACKAGE "nushell"
+}
+
+@test "nushell formula is in macos workstation formulae (via james_tools)" {
+    load_packages --set workstation --platform macos --type formulae
+    assert_array_contains FORMULAE_TO_INSTALL "nushell"
+}
+
+@test "nushell formula is in linux workstation packages (via james_tools)" {
+    load_packages --set workstation --platform linux
+    assert_array_contains PACKAGES_TO_INSTALL "nushell"
+}
+
+@test "nushell is NOT in server/iot/lxc stow output (workstation-only)" {
+    load_packages --set server --type stow
+    assert_array_not_contains PACKAGE "nushell"
+    load_packages --set iot --type stow
+    assert_array_not_contains PACKAGE "nushell"
+    load_packages --set lxc --type stow
+    assert_array_not_contains PACKAGE "nushell"
+}
+
+@test "stow lxc matches iot" {
+    load_packages --set iot --type stow
+    local iot_packages=("${PACKAGE[@]}")
+
+    load_packages --set lxc --type stow
+    local lxc_packages=("${PACKAGE[@]}")
+
+    assert_equal "${#iot_packages[@]}" "${#lxc_packages[@]}"
+    for i in "${!iot_packages[@]}"; do
+        assert_equal "${iot_packages[$i]}" "${lxc_packages[$i]}"
+    done
+}

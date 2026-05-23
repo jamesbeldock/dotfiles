@@ -34,6 +34,29 @@ setup() {
     assert_output --partial "Invalid option"
 }
 
+# --- Dynamic set discovery ---
+
+@test "parse_args help shows available sets dynamically" {
+    run parse_args --help
+    assert_output --partial "Available sets:"
+    assert_output --partial "server"
+    assert_output --partial "workstation"
+}
+
+@test "parse_args --list returns 1 and shows sets" {
+    run parse_args --list
+    [ "$status" -eq 1 ]
+    assert_output --partial "Available sets:"
+}
+
+@test "parse_args accepts all discovered sets" {
+    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --list-sets)"
+    for set_name in "${AVAILABLE_SETS[@]}"; do
+        parse_args "$set_name"
+        assert_equal "$MODE" "$set_name"
+    done
+}
+
 # --- Mode setting ---
 
 @test "parse_args server sets MODE" {
@@ -51,10 +74,9 @@ setup() {
     assert_equal "$MODE" "iot"
 }
 
-@test "parse_args lxc returns 2 (not valid for bootstrap)" {
-    run parse_args lxc
-    [ "$status" -eq 2 ]
-    assert_output --partial "Invalid option"
+@test "parse_args lxc sets MODE" {
+    parse_args lxc
+    assert_equal "$MODE" "lxc"
 }
 
 # --- OS detection ---
