@@ -218,14 +218,15 @@ load_packages() {
 
 # --- Stow packages ---
 
-@test "stow workstation has 11 packages" {
+@test "stow workstation has 12 packages" {
     load_packages --set workstation --type stow
     assert_array_contains PACKAGE "basic"
     assert_array_contains PACKAGE "config resources"
     assert_array_contains PACKAGE "iterm2"
+    assert_array_contains PACKAGE "nushell"
     assert_array_contains PACKAGE "oh-my-zsh"
     assert_array_contains PACKAGE "wezterm"
-    assert_array_length PACKAGE 11
+    assert_array_length PACKAGE 12
 }
 
 @test "stow server has 8 packages" {
