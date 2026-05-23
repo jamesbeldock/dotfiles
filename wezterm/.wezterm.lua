@@ -4,6 +4,9 @@ local wezterm = require("wezterm")
 -- This will hold the configuration.
 local config = wezterm.config_builder()
 
+-- Launch tmux directly; tmux is configured to spawn nu per pane.
+config.default_prog = { "/opt/homebrew/bin/tmux" }
+
 config.initial_cols = 80
 config.initial_rows = 28
 
