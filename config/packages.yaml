@@ -92,6 +92,7 @@ groups:
       - name: ruby
       - name: tldr
       - name: fastfetch
+      - name: nushell
 
   lxc_tools:
     description: "LXC-specific tools"
@@ -142,6 +143,7 @@ stow_packages:
   - git
   - iterm2
   - karabiner
+  - nushell
   - nvim
   - oh-my-zsh
   - ssh
