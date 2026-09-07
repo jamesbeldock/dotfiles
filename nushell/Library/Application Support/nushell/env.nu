@@ -17,7 +17,7 @@ if ("/opt/homebrew/bin/brew" | path exists) {
 }
 
 # Antigravity
-$env.PATH = ($env.PATH | append "/Users/j/.antigravity/antigravity/bin" | uniq)
+$env.PATH = ($env.PATH | append ($nu.home-dir | path join ".antigravity/antigravity/bin") | uniq)
 
 # Editor, locale, misc
 $env.EDITOR = "nvim"
