@@ -48,6 +48,9 @@ setup() {
     grep -q "do { \^tty } | complete" "$ENV_NU"
 }
 
+# Static wiring check. Cheap, and the only autoload coverage that runs on
+# CI, where starship/atuin/zoxide aren't installed. The generation tests at
+# the bottom of this file are what actually verify the output.
 @test "env.nu wires up vendor autoload for starship, atuin, zoxide" {
     grep -q 'starship init nu' "$ENV_NU"
     grep -q 'zoxide init nushell' "$ENV_NU"
@@ -114,4 +117,50 @@ setup() {
     run nu --no-config-file -c "source \"$ENV_NU\"; source \"$CONFIG_NU\"; print OK" < /dev/null
     assert_success
     assert_output --partial "OK"
+}
+
+# --- Live vendor autoload generation (skipped when tools unavailable) ---
+#
+# env.nu only writes vendor/autoload/*.nu when the file is missing, so these
+# run its real generation block against a throwaway $nu.data-dir and inspect
+# what it produced. Grepping env.nu for 'atuin init nu' cannot catch a
+# regression in the generated output; this can.
+
+# Redirects $nu.data-dir into this test's tmpdir, sources env.nu, and sets
+# AUTOLOAD_DIR to the directory it populated. Each bats test runs in its own
+# subshell, so the export does not leak.
+generate_vendor_autoload() {
+    export XDG_DATA_HOME="$BATS_TEST_TMPDIR"
+    nu --no-config-file -c "source \"$ENV_NU\"" < /dev/null
+    AUTOLOAD_DIR="${XDG_DATA_HOME}/nushell/vendor/autoload"
+}
+
+@test "env.nu generates the starship, atuin and zoxide autoload files" {
+    command -v nu &> /dev/null || skip "nu not installed"
+    for tool in starship atuin zoxide; do
+        command -v "$tool" &> /dev/null || skip "$tool not installed"
+    done
+
+    generate_vendor_autoload
+    [ -s "${AUTOLOAD_DIR}/starship.nu" ]
+    [ -s "${AUTOLOAD_DIR}/atuin.nu" ]
+    [ -s "${AUTOLOAD_DIR}/zoxide.nu" ]
+}
+
+@test "generated atuin.nu gives each keybinding a unique name" {
+    # `atuin init nu` names both its ctrl-r and up keybindings "atuin",
+    # which nushell rejects with nu::shell::shared_keybindings_name on every
+    # shell start. env.nu renames them while generating the file; this fails
+    # if that rename is dropped or stops matching atuin's output format.
+    command -v nu &> /dev/null || skip "nu not installed"
+    command -v atuin &> /dev/null || skip "atuin not installed"
+
+    generate_vendor_autoload
+    run nu --no-config-file -c "
+        source \"${AUTOLOAD_DIR}/atuin.nu\"
+        \$env.config.keybindings | get name | uniq --repeated | str join ','
+    " < /dev/null
+    assert_success
+    # Non-empty means duplicate names survived; the output names them.
+    assert_output ""
 }
