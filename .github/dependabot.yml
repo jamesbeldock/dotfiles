@@ -1,0 +1,53 @@
+version: 2
+
+updates:
+  # Vite/React build toolchain for the local dotfiles editor UI.
+  # These are all devDependencies, so batch minor+patch into a single weekly
+  # PR rather than one per package. Majors still arrive as separate PRs.
+  - package-ecosystem: npm
+    directory: /web/frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      frontend:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+
+  # FastAPI backend for the editor UI.
+  - package-ecosystem: pip
+    directory: /web/api
+    schedule:
+      interval: weekly
+    groups:
+      api:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+
+  # Config loader/validator used by the install scripts and the bats suite.
+  - package-ecosystem: pip
+    directory: /tools
+    schedule:
+      interval: weekly
+    groups:
+      tools:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns:
+          - "*"
