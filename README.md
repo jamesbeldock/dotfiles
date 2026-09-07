@@ -1,20 +1,248 @@
 # James's dotfiles
 
-(a work in progress, originally and still loosely based on [Mathias's dotfiles](https://github.com/mathiasbynens/dotfiles))
+(a work in progress, originally and still loosely based on
+[Mathias's dotfiles](https://github.com/mathiasbynens/dotfiles))
 
-## New Mac Setup
+Config for zsh, nushell, nvim, tmux, git, starship, wezterm/iTerm2 and friends,
+plus the scripts that install the packages those configs expect. Dotfiles are
+symlinked into `$HOME` with [GNU Stow](https://www.gnu.org/software/stow/);
+package lists live in YAML under `config/` rather than in the shell scripts.
 
-1. `xcode-select --install` (make sure Xcode CLI tools are installed)
-1. `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` (install Homebrew)
-1. `brew install gh` github tools
-1. `mkdir ~/dev` place for these and other projects
-1. `gh auth login` go through auth process
-1. `gh repo clone jamesbeldock/dotfiles`
-1. `source dotfiles/bootstrap.sh`
+- [Sets](#sets)
+- [Clean macOS setup](#clean-macos-setup)
+- [Clean Linux setup](#clean-linux-setup)
+- [What bootstrap actually does](#what-bootstrap-actually-does)
+- [Running the pieces individually](#running-the-pieces-individually)
+- [How the stow layout works](#how-the-stow-layout-works)
+- [Known rough edges](#known-rough-edges)
+- [Testing](#testing)
 
-## Linux Setup
+## Sets
 
-1. `cd ~ && mkdir code && cd code`
-1. install Git and command line: `sudo apt install git gh`
-1. grab the repo: `git clone https://github.com/jamesbeldock/dotfiles.git`
-1. start it up: `cd dotfiles && source bootstrap.sh
+Every script takes a *set* naming how much to install. Sets are defined by the
+files in `config/sets/`, so `--list` is always the authoritative answer.
+
+| Set | Linux | macOS | Stow packages | What it is |
+|---|---|---|---|---|
+| `iot` | yes | — | 6 | Basic tools, core utils, and the usual CLI kit (tmux, zsh, nvim) |
+| `lxc` | yes | — | 6 | Minimal tools, core utils, LXC-specific bits |
+| `server` | yes | yes | 8 | `iot` plus network/security tools and general utilities |
+| `workstation` | yes | yes | 12 | Everything, including GUI casks and Nerd Fonts |
+
+`iot` and `lxc` declare no macOS packages. Running them on a Mac is not an
+error — the installer prints a skip message and moves on to stowing.
+
+## Clean macOS setup
+
+### 1. Xcode command line tools
+
+```bash
+xcode-select --install
+```
+
+### 2. Clone the repo
+
+Homebrew is *not* a prerequisite — `osx-package-install.sh` installs it if it
+is missing. But you need `git`, which arrives with the Xcode CLI tools above.
+
+```bash
+mkdir -p ~/code && cd ~/code
+git clone --recurse-submodules https://github.com/jamesbeldock/dotfiles.git
+cd dotfiles
+```
+
+`--recurse-submodules` matters: Oh My Zsh and the BATS test libraries are
+submodules. If you already cloned without it, run
+`git submodule update --init --recursive`.
+
+### 3. Install the Python dependencies
+
+**This step is required, and bootstrap fails without it.** The install scripts
+read `config/*.yaml` by shelling out to `python3 tools/load_config.py`, which
+imports PyYAML and jsonschema. macOS ships `python3` but not those packages, so
+a clean machine dies at the first step with `ModuleNotFoundError: No module
+named 'yaml'` followed by a misleading `Error: No config sets found`.
+
+A virtualenv is the tidiest fix — activating it puts the right `python3` first
+on `PATH`, which is all the scripts care about:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r tools/requirements.txt
+```
+
+Confirm it took before going further:
+
+```bash
+bash bootstrap.sh --list      # => Available sets: iot lxc server workstation
+```
+
+If that prints a traceback instead, the `python3` on your `PATH` still lacks
+the dependencies.
+
+### 4. Bootstrap
+
+```bash
+bash bootstrap.sh workstation
+```
+
+Run it with `bash`, from inside the repo. Two things to know:
+
+- **Do not `source` it.** `main` is guarded by `[[ "${BASH_SOURCE[0]}" == "${0}" ]]`,
+  so sourcing defines the functions and runs nothing at all — silently.
+- **Do not run it from elsewhere.** `execute_bootstrap` invokes its child
+  scripts by relative path (`./osx-package-install.sh`), so `$PWD` must be the
+  repo root.
+
+Expect it to take a while on a fresh machine: `brew update && brew upgrade`
+runs first, then every formula and cask in the set.
+
+### 5. Sign in to GitHub (optional)
+
+`gh` is installed as part of `james_tools`, so this is easier afterwards:
+
+```bash
+gh auth login
+```
+
+## Clean Linux setup
+
+Debian/Ubuntu only — the installer is `apt-get` based.
+
+### 1. Install git and Python dependencies
+
+```bash
+sudo apt update
+sudo apt install -y git python3 python3-venv python3-pip
+```
+
+### 2. Clone the repo
+
+```bash
+mkdir -p ~/code && cd ~/code
+git clone --recurse-submodules https://github.com/jamesbeldock/dotfiles.git
+cd dotfiles
+```
+
+### 3. Install the Python dependencies
+
+Same requirement and same reason as macOS — see
+[step 3 above](#3-install-the-python-dependencies).
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r tools/requirements.txt
+bash bootstrap.sh --list      # => Available sets: iot lxc server workstation
+```
+
+On distros that mark the system Python externally managed (PEP 668), the venv
+is not optional — a plain `pip install` into system Python is refused.
+
+### 4. Bootstrap
+
+```bash
+bash bootstrap.sh server        # or: iot, lxc, workstation
+```
+
+You will be prompted for `sudo`. The script detects whether it is already root
+and only prefixes `sudo` when it is not, so it works unmodified inside a
+container running as root.
+
+## What bootstrap actually does
+
+`bootstrap.sh <set>` runs, in order:
+
+1. **Validates the config.** `tools/validate_config.py` checks every YAML file
+   against its JSON schema and cross-checks that group and stow-package names
+   actually exist. A bad config aborts before anything is installed.
+2. **Installs packages** — `osx-package-install.sh` (Homebrew formulae + casks,
+   installing Homebrew itself if absent) or `linux-apt-package-install.sh`
+   (`apt-get`, plus starship via its upstream install script).
+3. **Stows the dotfiles** — `stow-packages.sh` symlinks each stow package for
+   the set into `$HOME`. A package that conflicts is reported and skipped
+   rather than aborting the run, so you see every conflict in one pass.
+4. **Post-install odds and ends** — atuin via zinit, the eza theme symlink, and
+   cloning TPM + tmux2k into `~/.tmux/plugins/`.
+
+Step 4 is the fragile part on a genuinely clean machine; see below.
+
+## Running the pieces individually
+
+Each script stands alone and takes the same arguments:
+
+```bash
+bash bootstrap.sh --list                 # show available sets
+bash bootstrap.sh --help
+bash stow-packages.sh workstation        # re-link dotfiles only
+bash osx-package-install.sh server       # macOS packages only
+bash linux-apt-package-install.sh iot    # Linux packages only
+```
+
+All of them are safe to re-run. Package installs skip anything already present,
+and `stow` is idempotent once the symlinks exist.
+
+To see what a set resolves to without installing anything:
+
+```bash
+python3 tools/load_config.py --set workstation --platform macos --type casks
+python3 tools/load_config.py --set server --type stow
+python3 tools/validate_config.py
+```
+
+## How the stow layout works
+
+Each top-level directory named in `config/packages.yaml`'s `stow_packages` is a
+stow package whose contents mirror `$HOME`:
+
+```
+nvim/.config/nvim/...        ->  ~/.config/nvim/...
+zsh/.zshrc                   ->  ~/.zshrc
+karabiner/dot-config/...     ->  ~/.config/...
+```
+
+Everything is stowed with `stow -v -t ~/ --dotfiles`, so a `dot-` prefix in the
+repo becomes a leading `.` in `$HOME`. Both spellings appear in this repo —
+literal `.zshrc` and prefixed `dot-config` — and `--dotfiles` handles both.
+
+`.stow-local-ignore` keeps `README`, `LICENSE`, VCS metadata and editor cruft
+out of `$HOME`.
+
+## Known rough edges
+
+Real behaviour worth knowing before a first run, rather than discovering at
+step 40:
+
+- **`source bootstrap.sh` silently does nothing.** Use `bash bootstrap.sh <set>`.
+  Older versions of this README recommended sourcing; that never ran `main`.
+- **A set argument is required.** `bootstrap.sh` with no argument prints usage
+  and exits 0, which reads like success.
+- **macOS: the `zsh` package can fail to stow on a clean machine.**
+  `osx-package-install.sh` appends a Ruby `PATH` line to `~/.zshrc`, creating
+  the file, and `stow` then refuses to overwrite it with the repo's `.zshrc`.
+  The run reports the conflict and continues. Remove or move `~/.zshrc` and
+  re-run `bash stow-packages.sh <set>`.
+- **Step 4 of bootstrap assumes a warm machine.** It calls `zinit`, which
+  `.zshrc` installs on first zsh startup — so under `bash` on a clean box it is
+  not yet a command. It also `ln -s`s into `~/.eza/` and `git clone`s into
+  `~/.tmux/plugins/`, both of which fail if the directory is missing or already
+  populated. These are the last steps, so packages and symlinks are already in
+  place; finish them by hand or start a new zsh session and re-run.
+- **`shell.sh` is not wired in.** `bootstrap.sh` has the call commented out
+  pending a Linux fix, so Oh My Zsh and the default-shell change do not happen
+  automatically. Run it by hand on macOS if you want them.
+
+## Testing
+
+The repo has a BATS suite for the shell scripts and a pytest suite for the
+Python tools, both run in CI on Linux and macOS. See [TESTING.md](TESTING.md)
+for prerequisites and how to run them.
+
+```bash
+pip install -r tools/requirements-dev.txt
+pytest && ./test/libs/bats-core/bin/bats test/
+```
+
+Nushell specifics — the config layout, what is ported from zsh, and how vendor
+autoload files are generated — are in [NUSHELL.md](NUSHELL.md).
