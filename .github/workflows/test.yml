@@ -28,5 +28,52 @@ jobs:
       - name: Run pytest tests
         run: pytest
 
+      # starship/atuin/zoxide are not installed here, so the vendor autoload
+      # generation tests skip. The macOS job below is what covers them.
+      - name: Run BATS tests
+        run: ./test/libs/bats-core/bin/bats test/
+
+  test-macos:
+    name: macOS Unit Tests
+    # Pinned deliberately: macos-latest moves between OS releases, which
+    # changes the Homebrew prefix (Intel /usr/local vs arm64 /opt/homebrew)
+    # and the preinstalled tool versions. env.nu only wires up PATH when
+    # /opt/homebrew/bin/brew exists, so an Intel runner would silently skip
+    # that branch.
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Python dependencies
+        run: pip install -r tools/requirements-dev.txt
+
+      # bash: macOS ships 3.2 (GPLv2), but test/test_helper.bash needs 4.0+.
+      # coreutils: env.nu shells out to `brew --prefix coreutils` on startup.
+      # The rest: without them the nushell autoload generation tests skip.
+      - name: Install bash 4+ and the shell integrations
+        run: brew install bash coreutils nushell atuin starship zoxide
+
+      - name: Confirm bash 4+ resolves first on PATH
+        run: |
+          # `env bash` resolves the same way bats' `#!/usr/bin/env bash` does.
+          env bash --version | head -1
+          major="$(env bash -c 'echo ${BASH_VERSINFO[0]}')"
+          if [ "$major" -lt 4 ]; then
+            echo "::error::bats needs bash 4+, but PATH resolves to bash $major"
+            exit 1
+          fi
+
+      - name: Run pytest tests
+        run: pytest
+
       - name: Run BATS tests
         run: ./test/libs/bats-core/bin/bats test/
