@@ -8,8 +8,9 @@ export default function ConfigSetsPage() {
   const [activeSet, setActiveSet] = useState<string | null>(null);
   const [compareSets, setCompareSets] = useState<string[]>([]);
   const [comparison, setComparison] = useState<any>(null);
-  const [allGroups, setAllGroups] = useState<any[]>([]);
-  const [setConfig, setSetConfig] = useState<any>(null);
+  // Fetched but not yet rendered anywhere; only the setters are referenced.
+  const [, setAllGroups] = useState<any[]>([]);
+  const [, setSetConfig] = useState<any>(null);
 
   const loadSets = useCallback(async () => {
     const list = await sets.list();

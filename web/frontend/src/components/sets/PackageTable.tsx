@@ -80,7 +80,6 @@ export default function PackageTable({ comparison, activeSet, onToggleGroup }: P
                   key={group.name}
                   group={group}
                   sets={comparison.sets}
-                  activeSet={activeSet}
                   isCollapsed={isCollapsed}
                   onToggleCollapse={() => toggleCollapse(group.name)}
                   onToggleGroup={onToggleGroup}
@@ -101,14 +100,13 @@ import { Fragment } from 'react';
 interface GroupRowsProps {
   group: Group;
   sets: string[];
-  activeSet: string;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   onToggleGroup: (setName: string, groupName: string, platform: 'linux' | 'macos_formulae' | 'macos_cask') => void;
   groupPlatforms: (group: Group, setName: string) => { linux: boolean; macos: string | false };
 }
 
-function GroupRows({ group, sets, activeSet, isCollapsed, onToggleCollapse, onToggleGroup, groupPlatforms }: GroupRowsProps) {
+function GroupRows({ group, sets, isCollapsed, onToggleCollapse, onToggleGroup, groupPlatforms }: GroupRowsProps) {
   return (
     <>
       {/* Group header row */}
