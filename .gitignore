@@ -1,6 +1,9 @@
 # Compiled Python files
 *.pyc
 
+# Local virtualenv for tools/requirements.txt (see TESTING.md)
+.venv/
+
 # Folder view configuration files
 .DS_Store
 Desktop.ini

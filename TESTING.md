@@ -7,6 +7,9 @@ This repository uses [BATS](https://github.com/bats-core/bats-core)
 
 - **Bash 4.0+** (required by test helpers; macOS ships with Bash 3.2)
 - **Git** (for submodule checkout)
+- **Python 3** with the packages in `tools/requirements.txt` (PyYAML,
+  jsonschema). `parse_args` shells out to `tools/load_config.py`, so without
+  these most tests fail with `ModuleNotFoundError: No module named 'yaml'`.
 
 ### macOS
 
@@ -27,6 +30,25 @@ git submodule update --init --recursive
 ```
 
 This pulls bats-core, bats-support, and bats-assert into `test/libs/`.
+
+Then install the Python dependencies. A virtualenv is recommended — Homebrew's
+Python is marked externally managed (PEP 668), so a plain `pip install` into it
+is refused:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r tools/requirements.txt
+```
+
+Activate it before running the suite, so the `python3` that
+`tools/load_config.py` runs under is the one with the dependencies:
+
+```bash
+source .venv/bin/activate
+```
+
+CI does the equivalent via `actions/setup-python` plus
+`pip install -r tools/requirements.txt` (see `.github/workflows/test.yml`).
 
 ## Running Tests
 
