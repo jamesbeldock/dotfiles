@@ -1,7 +1,11 @@
 # Compiled Python files
 *.pyc
+__pycache__/
 
-# Local virtualenv for tools/requirements.txt (see TESTING.md)
+# pytest run cache
+.pytest_cache/
+
+# Local virtualenv for tools/requirements-dev.txt (see TESTING.md)
 .venv/
 
 # Folder view configuration files

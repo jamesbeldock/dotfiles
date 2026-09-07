@@ -1,0 +1,4 @@
+# Test-only dependencies. Runtime deps for the tools themselves live in
+# requirements.txt; install both to run the pytest suite.
+-r requirements.txt
+pytest>=8.0

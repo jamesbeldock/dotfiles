@@ -1,7 +1,20 @@
 # Testing Guide
 
-This repository uses [BATS](https://github.com/bats-core/bats-core)
-(Bash Automated Testing System) for unit testing the shell scripts.
+This repository uses two test runners, split by what is under test:
+
+- **[BATS](https://github.com/bats-core/bats-core)** (`test/*.bats`) for the
+  shell scripts, the nushell package, and the bash-eval contract the Python
+  tools expose to the install scripts.
+- **[pytest](https://docs.pytest.org/)** (`test/python/`) for the branching
+  logic inside `tools/load_config.py` and `tools/validate_config.py`, imported
+  and called directly.
+
+The split is deliberate and narrow. BATS can source a bash script and inspect
+its arrays, which is most of what needs testing here; pytest can reach the
+Python edge cases (empty inputs, malformed config, argparse error paths)
+in-process, without a subprocess per assertion. Adding a package to
+`config/packages.yaml`? That is a BATS test. Adding a branch to
+`load_config.py`? That is a pytest test.
 
 ## Prerequisites
 
@@ -37,8 +50,11 @@ is refused:
 
 ```bash
 python3 -m venv .venv
-.venv/bin/pip install -r tools/requirements.txt
+.venv/bin/pip install -r tools/requirements-dev.txt
 ```
+
+`requirements-dev.txt` pulls in `requirements.txt` and adds pytest. If you only
+want to *run* the tools rather than test them, `requirements.txt` is enough.
 
 Activate it before running the suite, so the `python3` that
 `tools/load_config.py` runs under is the one with the dependencies:
@@ -52,7 +68,13 @@ CI does the equivalent via `actions/setup-python` plus
 
 ## Running Tests
 
-### Run all tests
+### Run everything
+
+```bash
+pytest && ./test/libs/bats-core/bin/bats test/
+```
+
+### Run all BATS tests
 
 ```bash
 ./test/libs/bats-core/bin/bats test/
@@ -74,6 +96,18 @@ CI does the equivalent via `actions/setup-python` plus
 
 ```bash
 ./test/libs/bats-core/bin/bats --verbose-run test/
+```
+
+### Run the pytest suite
+
+`pytest.ini` sets `testpaths`, so a bare `pytest` from the repo root picks up
+`test/python/` only. The whole suite runs in well under a second.
+
+```bash
+pytest                                        # all Python tests
+pytest test/python/test_load_config.py        # one file
+pytest -k "platform_override"                 # by name
+pytest -v                                     # per-test output
 ```
 
 ## Test Architecture
@@ -104,6 +138,18 @@ Tests never install packages, run `apt-get`/`brew`, or require root privileges.
 | `linux-apt-package-install.sh` | Arg parsing, mode setting, all 7 file-scope arrays, package assembly for all 4 modes, privilege detection |
 | `osx-package-install.sh`       | Arg parsing (incl. iot early exit), mode setting, file-scope arrays, formulae/cask assembly for server and workstation |
 | `bootstrap.sh`                 | Arg parsing, mode setting, OS detection with mocked OSTYPE           |
+| `nushell` package              | Stow layout, env.nu/config.nu content, live `nu` parse, and real vendor-autoload generation against a throwaway `$nu.data-dir` |
+
+### pytest (`test/python/`)
+
+| Module                     | Tests Cover                                                          |
+|----------------------------|----------------------------------------------------------------------|
+| `tools/load_config.py`     | `resolve_packages` group flattening and platform overrides, `format_bash_array` quoting, `list_sets` filtering, `check_platform_support` edge cases, and the CLI's error/exit paths |
+| `tools/validate_config.py` | Every cross-validation branch (unknown group, macos_only misuse, stow mismatch, name mismatch), schema violations, error accumulation, and `validate_schema` path rendering |
+
+Python tests import the tools directly (`conftest.py` puts `tools/` on
+`sys.path`) and drive `main()` in-process via the `run_cli` fixture, which
+patches `sys.argv` and returns `(exit_code, stdout, stderr)`.
 
 ## Adding Tests
 
@@ -133,6 +179,7 @@ Tests never install packages, run `apt-get`/`brew`, or require root privileges.
 ## File Layout
 
 ```
+pytest.ini              # pytest config; testpaths = test/python
 test/
   libs/
     bats-core/          # git submodule: test runner
@@ -143,4 +190,11 @@ test/
   linux-apt-package-install.bats
   osx-package-install.bats
   bootstrap.bats
+  load-config.bats      # bash-eval contract for tools/load_config.py
+  validate-config.bats  # exit codes for tools/validate_config.py
+  nushell-package.bats
+  python/
+    conftest.py         # sys.path setup + shared fixtures
+    test_load_config.py
+    test_validate_config.py
 ```

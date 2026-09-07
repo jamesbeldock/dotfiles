@@ -40,6 +40,14 @@ def validate_schema(data, schema, filename):
     return errors
 
 
+def report_failure(errors):
+    """Print accumulated errors and exit non-zero."""
+    print("Validation FAILED:")
+    for e in errors:
+        print(e)
+    sys.exit(1)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Validate YAML config files")
     parser.add_argument("--config-dir", help="Config directory path (auto-detected if not set)")
@@ -56,7 +64,14 @@ def main():
     # Validate packages.yaml
     packages_path = os.path.join(config_dir, "packages.yaml")
     catalog = load_yaml(packages_path)
-    errors.extend(validate_schema(catalog, packages_schema, "packages.yaml"))
+    catalog_errors = validate_schema(catalog, packages_schema, "packages.yaml")
+    errors.extend(catalog_errors)
+
+    # Everything below indexes into the catalog. If it does not match its
+    # schema, stop here and report -- otherwise a malformed packages.yaml
+    # raises a traceback instead of a readable validation failure.
+    if catalog_errors:
+        report_failure(errors)
 
     # Collect valid group names and stow packages from catalog
     valid_groups = set(catalog.get("groups", {}).keys())
@@ -107,10 +122,7 @@ def main():
                 errors.append(f"  {filename}: macos.cask_groups: unknown group '{group}'")
 
     if errors:
-        print("Validation FAILED:")
-        for e in errors:
-            print(e)
-        sys.exit(1)
+        report_failure(errors)
     else:
         print(f"All config files valid ({len(set_files)} sets validated).")
         sys.exit(0)
