@@ -49,5 +49,11 @@ if not ($zoxide_file | path exists) and (which zoxide | is-not-empty) {
 
 let atuin_file = ($autoload_dir | path join "atuin.nu")
 if not ($atuin_file | path exists) and (which atuin | is-not-empty) {
-    ^atuin init nu | save -f $atuin_file
+    # `atuin init nu` names both its keybindings (ctrl-r, up) "atuin", which
+    # trips nu::shell::shared_keybindings_name. Rename them in first-match
+    # order: ctrl-r comes first in the generated output, then up.
+    ^atuin init nu
+    | str replace "name: atuin\n" "name: atuin_search\n"
+    | str replace "name: atuin\n" "name: atuin_up\n"
+    | save -f $atuin_file
 }
