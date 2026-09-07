@@ -1,0 +1,32 @@
+# Ghostty configuration
+#
+# Only settings that differ from Ghostty's defaults belong here. To see every
+# available option with its default value and documentation:
+#
+#   ghostty +show-config --default --docs
+#
+# Do not paste that output back into this file -- it round-trips escapes
+# incorrectly (notably keybind `text:` actions) and pins defaults that later
+# Ghostty versions change.
+#
+# Verify changes with `ghostty +validate-config`.
+
+# --- Auto-update ---
+auto-update = download
+auto-update-channel = tip
+
+# --- Window size (in terminal grid cells) ---
+window-width = 120
+window-height = 28
+
+# --- Font ---
+font-size = 14
+# Ghostty does automatic glyph fallback; list primary first, fallbacks after.
+font-family = JetBrainsMono Nerd Font
+font-family = JetBrainsMono Nerd Font Mono
+font-family = FiraCode Nerd Font
+
+# --- Color scheme ---
+# wezterm "BlulocoDark". Verified against `ghostty +list-themes`: the bundled
+# name has a space.
+theme = Bluloco Dark
