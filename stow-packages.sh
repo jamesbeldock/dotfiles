@@ -49,14 +49,25 @@ detect_privilege() {
 }
 
 # execute_stow: runs stow for every package in the PACKAGE array.
+# Continues past a failing package so one conflict does not hide the rest,
+# then reports every failure. Returns 1 if any package failed.
 execute_stow() {
 	echo "Privilege mode: $PRIV_MODE"
 	echo "Stowing packages in $MODE mode..."
+	FAILED_PACKAGES=()
 	for package in "${PACKAGE[@]}"; do
 		echo "Stowing package: $package"
-		stow -v -t ~/ --dotfiles "$package"
+		if ! stow -v -t ~/ --dotfiles "$package"; then
+			FAILED_PACKAGES+=("$package")
+		fi
 	done
+	if [ ${#FAILED_PACKAGES[@]} -gt 0 ]; then
+		echo "Failed to stow ${#FAILED_PACKAGES[@]} of ${#PACKAGE[@]} package(s): ${FAILED_PACKAGES[*]}" >&2
+		echo "Resolve the conflicts reported above, then re-run." >&2
+		return 1
+	fi
 	echo "All packages stowed successfully."
+	return 0
 }
 
 main() {
@@ -65,7 +76,7 @@ main() {
 	if [ $rc -eq 1 ]; then exit 0; fi
 	if [ $rc -eq 2 ]; then exit 1; fi
 	detect_privilege
-	execute_stow
+	execute_stow || exit 1
 	exit 0
 }
 

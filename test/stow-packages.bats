@@ -94,3 +94,81 @@ setup() {
     assert_equal "$PRIV_MODE" "root (no sudo required)"
     unset -f id
 }
+
+# --- Stow execution ---
+#
+# `stow` is stubbed out so these tests never touch the real home directory.
+# The stub echoes the package it was handed (always the last argument) so
+# tests can assert which packages were attempted.
+
+# stub_stow FAILING...: replaces `stow` with a stub that exits 1 for any
+# package named in the argument list and 0 for everything else.
+stub_stow() {
+    # Global, not local: the stub body is evaluated after stub_stow returns.
+    STUB_STOW_FAILING=" $* "
+    stow() {
+        local pkg="${!#}"
+        echo "STOWED:$pkg"
+        [[ "$STUB_STOW_FAILING" == *" $pkg "* ]] && return 1
+        return 0
+    }
+}
+
+@test "execute_stow succeeds when every package stows" {
+    MODE="test"
+    PRIV_MODE="test"
+    PACKAGE=(alpha beta)
+    stub_stow
+    run execute_stow
+    assert_success
+    assert_output --partial "All packages stowed successfully."
+}
+
+@test "execute_stow returns 1 when a package conflicts" {
+    MODE="test"
+    PRIV_MODE="test"
+    PACKAGE=(alpha beta)
+    stub_stow beta
+    run execute_stow
+    assert_failure
+    [ "$status" -eq 1 ]
+}
+
+@test "execute_stow does not claim success when a package conflicts" {
+    MODE="test"
+    PRIV_MODE="test"
+    PACKAGE=(alpha beta)
+    stub_stow beta
+    run execute_stow
+    refute_output --partial "All packages stowed successfully."
+}
+
+@test "execute_stow names the package that failed" {
+    MODE="test"
+    PRIV_MODE="test"
+    PACKAGE=(alpha beta)
+    stub_stow beta
+    run execute_stow
+    assert_output --partial "Failed to stow 1 of 2 package(s): beta"
+}
+
+@test "execute_stow continues past a failing package" {
+    MODE="test"
+    PRIV_MODE="test"
+    PACKAGE=(alpha beta gamma)
+    stub_stow alpha
+    run execute_stow
+    assert_output --partial "STOWED:alpha"
+    assert_output --partial "STOWED:beta"
+    assert_output --partial "STOWED:gamma"
+}
+
+@test "execute_stow reports every failed package" {
+    MODE="test"
+    PRIV_MODE="test"
+    PACKAGE=(alpha beta gamma)
+    stub_stow alpha gamma
+    run execute_stow
+    assert_failure
+    assert_output --partial "Failed to stow 2 of 3 package(s): alpha gamma"
+}
