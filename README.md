@@ -14,6 +14,7 @@ package lists live in YAML under `config/` rather than in the shell scripts.
 - [What bootstrap actually does](#what-bootstrap-actually-does)
 - [Running the pieces individually](#running-the-pieces-individually)
 - [How the stow layout works](#how-the-stow-layout-works)
+- [When a file is already in the way](#when-a-file-is-already-in-the-way)
 - [Known rough edges](#known-rough-edges)
 - [Testing](#testing)
 
@@ -161,8 +162,10 @@ container running as root.
    installing Homebrew itself if absent) or `linux-apt-package-install.sh`
    (`apt-get`, plus starship via its upstream install script).
 3. **Stows the dotfiles** — `stow-packages.sh` symlinks each stow package for
-   the set into `$HOME`. A package that conflicts is reported and skipped
-   rather than aborting the run, so you see every conflict in one pass.
+   the set into `$HOME`. Where a real file is already sitting at a target, it
+   shows you the diff and asks which copy to keep (see below) instead of
+   aborting. A package that fails for some other reason is reported and
+   skipped rather than aborting the run, so you see every problem in one pass.
 4. **Post-install odds and ends** — atuin via zinit, the eza theme symlink, and
    cloning TPM + tmux2k into `~/.tmux/plugins/`.
 
@@ -181,7 +184,8 @@ bash linux-apt-package-install.sh iot    # Linux packages only
 ```
 
 All of them are safe to re-run. Package installs skip anything already present,
-and `stow` is idempotent once the symlinks exist.
+and `stow` is idempotent once the symlinks exist — a re-run only stops to ask
+about targets you chose to keep last time.
 
 To see what a set resolves to without installing anything:
 
@@ -209,6 +213,46 @@ literal `.zshrc` and prefixed `dot-config` — and `--dotfiles` handles both.
 `.stow-local-ignore` keeps `README`, `LICENSE`, VCS metadata and editor cruft
 out of `$HOME`.
 
+## When a file is already in the way
+
+Plain `stow` gives up on a whole package the moment it finds a real file where
+a symlink should go. `tools/stow_conflicts.sh` steps in first: it dry-runs
+stow, and for every blocked target it prints a summary of the diff between
+your file and the repo's, then asks which one wins:
+
+```
+Conflict on /Users/you/.zshrc
+  existing: /Users/you/.zshrc (file)
+  repo:     /Users/you/code/dotfiles/zsh/.zshrc (file)
+  diff:     41 line(s) only in the repo version, 2 only in the existing file
+  | --- /Users/you/.zshrc
+  | +++ /Users/you/code/dotfiles/zsh/.zshrc
+  | @@ -1,3 +1,42 @@
+  | -export PATH="/usr/local/opt/ruby/bin:$PATH"
+  ...
+  | ... 25 more diff line(s)
+  Keep [n]ew from repo, [e]xisting file, show full [d]iff, or [q]uit?
+```
+
+- **`n`** renames your file to `<file>.stow-backup-<timestamp>` and links the
+  repo version over it. Nothing is ever deleted.
+- **`e`** leaves your file exactly where it is and skips that one symlink; the
+  rest of the package still gets stowed.
+- **`d`** prints the whole diff, then asks again.
+- **`q`** stops the run, leaving every file untouched.
+
+The prompt reads from `/dev/tty`, so it still works when the script's stdin is
+a pipe. Three environment variables tune it:
+
+| Variable                  | Default    | Effect                                        |
+| ------------------------- | ---------- | --------------------------------------------- |
+| `STOW_CONFLICT_POLICY`    | `ask`      | `new` or `existing` answers every prompt for you |
+| `STOW_DIFF_PREVIEW_LINES` | `20`       | how many diff lines to show inline            |
+| `STOW_TTY`                | `/dev/tty` | where to read answers from                    |
+
+With no terminal to ask — CI, a `nohup`'d run — it keeps the existing file and
+says so, which never loses anything you had.
+
 ## Known rough edges
 
 Real behaviour worth knowing before a first run, rather than discovering at
@@ -218,11 +262,11 @@ step 40:
   Older versions of this README recommended sourcing; that never ran `main`.
 - **A set argument is required.** `bootstrap.sh` with no argument prints usage
   and exits 0, which reads like success.
-- **macOS: the `zsh` package can fail to stow on a clean machine.**
+- **macOS: the `zsh` package hits a conflict on a clean machine.**
   `osx-package-install.sh` appends a Ruby `PATH` line to `~/.zshrc`, creating
-  the file, and `stow` then refuses to overwrite it with the repo's `.zshrc`.
-  The run reports the conflict and continues. Remove or move `~/.zshrc` and
-  re-run `bash stow-packages.sh <set>`.
+  the file, so the repo's `.zshrc` has something in its way. You get the diff
+  prompt described above; answering `n` backs up the two-line stub and links
+  the real one.
 - **Step 4 of bootstrap assumes a warm machine.** It calls `zinit`, which
   `.zshrc` installs on first zsh startup — so under `bash` on a clean box it is
   not yet a command. It also `ln -s`s into `~/.eza/` and `git clone`s into

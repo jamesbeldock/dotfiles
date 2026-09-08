@@ -130,6 +130,11 @@ access to:
 
 Tests never install packages, run `apt-get`/`brew`, or require root privileges.
 
+`tools/stow_conflicts.sh` is a sourced library rather than a script, so
+`test/stow-conflicts.bats` sources it directly. Its end-to-end tests do run the
+real `stow`, but only inside a `mktemp -d` sandbox that stands in for both the
+stow directory and `$HOME`; they skip when `stow` is not installed.
+
 ## What Is Tested
 
 | Script                         | Tests Cover                                                          |
@@ -138,6 +143,7 @@ Tests never install packages, run `apt-get`/`brew`, or require root privileges.
 | `linux-apt-package-install.sh` | Arg parsing, mode setting, all 7 file-scope arrays, package assembly for all 4 modes, privilege detection |
 | `osx-package-install.sh`       | Arg parsing (incl. iot early exit), mode setting, file-scope arrays, formulae/cask assembly for server and workstation |
 | `bootstrap.sh`                 | Arg parsing, mode setting, OS detection with mocked OSTYPE           |
+| `tools/stow_conflicts.sh`      | Parsing each of stow's conflict messages, mapping a target back to its `dot-` prefixed repo file, diff summaries (line counts, identical files, directories, symlinks, truncation), the prompt's answers and re-prompting, and end-to-end backup/skip/quit against a real `stow` in a sandbox |
 | `nushell` package              | Stow layout, env.nu/config.nu content, live `nu` parse, and real vendor-autoload generation against a throwaway `$nu.data-dir` |
 
 ### pytest (`test/python/`)
@@ -187,6 +193,7 @@ test/
     bats-assert/        # git submodule: assertion functions
   test_helper.bash      # common setup, loads libraries, shared helpers
   stow-packages.bats
+  stow-conflicts.bats   # tools/stow_conflicts.sh; needs stow for the e2e tests
   linux-apt-package-install.bats
   osx-package-install.bats
   bootstrap.bats

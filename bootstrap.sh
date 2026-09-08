@@ -7,6 +7,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/tools/discover_sets.sh"
+source "$SCRIPT_DIR/tools/stow_conflicts.sh"
 
 # parse_args: sets MODE. Returns 0 on success, 1 for help/list, 2 for invalid arg.
 parse_args() {
@@ -70,7 +71,7 @@ execute_bootstrap() {
 		atclone"./atuin init zsh > init.zsh; ./atuin gen-completions --shell zsh > _atuin" \
 		atpull"%atclone" src"init.zsh"
 	zinit light atuinsh/atuin
-	stow -v -t ~/ --dotfiles atuin
+	stow_package "$SCRIPT_DIR" "$HOME" atuin
 
 	# install eza theme
 	ln -s ~/.config/resources/tokyonight.yml ~/.eza/theme.yml
