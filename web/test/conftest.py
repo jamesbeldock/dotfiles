@@ -1,11 +1,19 @@
 """Shared fixtures for Playwright UI tests."""
 import multiprocessing
+import shutil
 import socket
 import time
+from pathlib import Path
 
 import pytest
 import uvicorn
 from playwright.sync_api import sync_playwright
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+# Deliberately obvious in a directory listing, in case a run is ever killed
+# between the mkdir and the teardown.
+SCRATCH_PACKAGE = "_ui_scratch_pkg"
 
 
 def _find_free_port():
@@ -55,6 +63,23 @@ def browser():
     yield b
     b.close()
     pw.stop()
+
+
+@pytest.fixture
+def scratch_package():
+    """A throwaway stow package for tests that create or delete files.
+
+    Made on disk rather than through the UI's "+ New" button, which would also
+    write the package name into config/packages.yaml — no test should edit real
+    config. Torn down even when the test fails, so a leftover file can never end
+    up in a real package for `stow` to link into $HOME.
+    """
+    pkg_dir = PROJECT_ROOT / SCRATCH_PACKAGE
+    pkg_dir.mkdir(exist_ok=True)
+    try:
+        yield SCRATCH_PACKAGE
+    finally:
+        shutil.rmtree(pkg_dir, ignore_errors=True)
 
 
 @pytest.fixture

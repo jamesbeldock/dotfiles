@@ -36,6 +36,26 @@ def _select_package_with_files(page):
     return False
 
 
+def _select_package_named(page, name):
+    """Click the sidebar entry for a specific package."""
+    _wait_for_packages(page)
+    entry = page.locator("div.cursor-pointer div.truncate", has_text=name).first
+    entry.wait_for(state="visible", timeout=5000)
+    entry.click()
+    expect(page.locator("button", has_text="+ New File")).to_be_visible()
+
+
+def _remount_stow_tab(page):
+    """Toggle away and back so StowPackagesPage refetches its package list.
+
+    The list is loaded once on mount, so a package created on disk after the
+    tab was opened is invisible until the component remounts.
+    """
+    page.locator("nav button", has_text="Configuration Sets").click()
+    page.locator("nav button", has_text="Stow Packages").click()
+    page.locator("main").wait_for(state="visible")
+
+
 def _find_compare_dropdown(page):
     """Find and return the 'Compare with...' select element."""
     for s in page.locator("main select").all():
@@ -127,11 +147,17 @@ class TestStowPackagesTab:
         _select_first_package(page)
         expect(page.locator("button", has_text="+ New File")).to_be_visible()
 
-    def test_delete_file(self, page):
-        """Create a temp file via the UI, then delete it."""
-        tmp_file = "_test_delete_me.txt"
+    def test_delete_file(self, page, scratch_package):
+        """Create a temp file via the UI, then delete it.
 
-        _select_first_package(page)
+        Runs against the scratch package, not whichever real one happens to
+        sort first: an interrupted run used to leave the temp file behind in
+        a package that `stow` then linked into $HOME.
+        """
+        tmp_file = "delete_me.txt"
+
+        _remount_stow_tab(page)
+        _select_package_named(page, scratch_package)
 
         # Create file via the "+ New File" prompt
         page.on("dialog", lambda d: d.accept(tmp_file))
