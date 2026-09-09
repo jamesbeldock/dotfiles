@@ -13,8 +13,10 @@ from playwright.sync_api import sync_playwright
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 # Deliberately obvious in a directory listing, in case a run is ever killed
-# between the mkdir and the teardown.
-SCRATCH_PACKAGE = "_ui_scratch_pkg"
+# between the mkdir and the teardown. Must start with an alphanumeric to
+# satisfy validate_name: the sidebar lists a package the API then refuses to
+# read or write, which shows up as a silently empty file table.
+SCRATCH_PACKAGE = "ui-scratch-pkg"
 
 
 def _find_free_port():
