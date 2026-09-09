@@ -2,6 +2,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/tools/discover_sets.sh"
+source "$SCRIPT_DIR/tools/brew_env.sh"
 source "$SCRIPT_DIR/tools/stow_conflicts.sh"
 
 # parse_args: sets MODE and PACKAGE array from YAML config.
@@ -56,6 +57,9 @@ detect_privilege() {
 # Returns 1 if any package failed or the user quit.
 execute_stow() {
 	echo "Privilege mode: $PRIV_MODE"
+	# Covers being run directly on a Mac whose shell has not picked up
+	# /opt/homebrew/bin yet; a no-op everywhere else.
+	brew_shellenv || true
 	stow_require || return 1
 	echo "Stowing packages in $MODE mode..."
 	FAILED_PACKAGES=()

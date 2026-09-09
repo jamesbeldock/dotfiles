@@ -7,6 +7,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/tools/discover_sets.sh"
+source "$SCRIPT_DIR/tools/brew_env.sh"
 source "$SCRIPT_DIR/tools/stow_conflicts.sh"
 
 # parse_args: sets MODE. Returns 0 on success, 1 for help/list, 2 for invalid arg.
@@ -102,6 +103,11 @@ execute_bootstrap() {
 		echo "Nothing has been symlinked; fix the errors above and re-run." >&2
 		return 1
 	fi
+
+	# That step ran in a subshell, so a Homebrew it installed and put on PATH
+	# is invisible here. Load it again or the stow below cannot find the stow
+	# that was just installed.
+	brew_shellenv || true
 
 	bash ./stow-packages.sh "$MODE"
 

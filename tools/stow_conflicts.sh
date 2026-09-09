@@ -34,11 +34,34 @@ stow_available() {
 }
 
 # stow_require: prints an actionable message and returns 1 if stow is missing.
+# Args: candidate stow paths to check before declaring it uninstalled
+#       (defaults to the Homebrew and Linuxbrew prefixes).
 stow_require() {
 	if stow_available; then
 		return 0
 	fi
-	echo "GNU Stow is not installed, so nothing can be symlinked." >&2
+	echo "GNU Stow is not on PATH, so nothing can be symlinked." >&2
+
+	# "Not on PATH" and "not installed" need different fixes, and a
+	# brew-installed stow is invisible to a shell that never loaded Homebrew.
+	local candidates=("$@")
+	if [ ${#candidates[@]} -eq 0 ]; then
+		candidates=(
+			/opt/homebrew/bin/stow
+			/usr/local/bin/stow
+			/home/linuxbrew/.linuxbrew/bin/stow
+		)
+	fi
+
+	local candidate
+	for candidate in "${candidates[@]}"; do
+		if [ -x "$candidate" ]; then
+			echo "It is installed at $candidate, just not on PATH." >&2
+			echo 'Load Homebrew first: eval "$(brew shellenv)"' >&2
+			return 1
+		fi
+	done
+
 	echo "Install it (brew install stow, or apt-get install stow) and re-run." >&2
 	return 1
 }

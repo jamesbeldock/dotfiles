@@ -341,10 +341,27 @@ MKDIR: .config"
     assert_output ""
 }
 
-@test "stow_require explains how to install a missing stow" {
+@test "stow_require explains how to install a genuinely missing stow" {
     stow_available() { return 1; }
-    run stow_require
+    # Explicit candidates: the real prefixes exist on a developer Mac, which
+    # would otherwise send this down the "installed but not on PATH" branch.
+    run stow_require "$SANDBOX/nowhere/stow"
     assert_failure
-    assert_output --partial "GNU Stow is not installed"
+    assert_output --partial "GNU Stow is not on PATH"
     assert_output --partial "apt-get install stow"
+}
+
+@test "stow_require distinguishes installed-but-not-on-PATH" {
+    stow_available() { return 1; }
+    local installed="$SANDBOX/opt/bin/stow"
+    mkdir -p "$(dirname "$installed")"
+    touch "$installed"
+    chmod +x "$installed"
+
+    run stow_require "$installed"
+    assert_failure
+    assert_output --partial "just not on PATH"
+    assert_output --partial "brew shellenv"
+    # This is the case that misreported itself as "not installed".
+    refute_output --partial "apt-get install stow"
 }

@@ -187,10 +187,11 @@ stub_stow() {
 
     run execute_stow
     assert_failure
-    assert_output --partial "GNU Stow is not installed"
-    assert_output --partial "brew install stow"
-    # One message, not one per package, and no package attempted.
-    assert_equal "$(grep -c 'GNU Stow is not installed' <<<"$output")" "1"
+    assert_output --partial "GNU Stow is not on PATH"
+    # One message, not one per package, and no package attempted. Which remedy
+    # stow_require then suggests depends on whether a brew-installed stow is
+    # present on this machine, so that is asserted in its own tests.
+    assert_equal "$(grep -c 'GNU Stow is not on PATH' <<<"$output")" "1"
     refute_output --partial "Stowing package:"
 }
 

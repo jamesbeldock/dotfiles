@@ -2,6 +2,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/tools/discover_sets.sh"
+source "$SCRIPT_DIR/tools/brew_env.sh"
 # Install GNU core utilities (those that come with macOS are outdated).
 # Don't forget to add `$(brew --prefix coreutils)/libexec/gnubin` to `$PATH`.
 GNU_CORE_UTILS=(
@@ -114,29 +115,6 @@ CASK_APPS=(
     "1password-cli"
 	"flux-app"
 )
-
-# brew_shellenv: puts an already-installed Homebrew on PATH for this shell.
-# Args: candidate brew paths (defaults to the Apple Silicon and Intel prefixes).
-# Returns 1 if none of them exist.
-#
-# The installer writes /etc/paths.d/homebrew, but that is only read when a new
-# login shell starts. Without this, every brew call in the same run fails with
-# "command not found" on a machine that did not already have Homebrew.
-brew_shellenv() {
-	local candidates=("$@")
-	if [ ${#candidates[@]} -eq 0 ]; then
-		candidates=(/opt/homebrew/bin/brew /usr/local/bin/brew)
-	fi
-
-	local candidate
-	for candidate in "${candidates[@]}"; do
-		if [ -x "$candidate" ]; then
-			eval "$("$candidate" shellenv)"
-			return 0
-		fi
-	done
-	return 1
-}
 
 # ensure_brew: checks for brew, installs if missing, runs update/upgrade.
 # Sets BREW_PREFIX. Returns 1 if brew cannot be made usable, because every

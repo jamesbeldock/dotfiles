@@ -182,6 +182,21 @@ teardown() {
     [ -d "$FAKE_HOME/.tmux/plugins" ]
 }
 
+@test "bootstrap reloads Homebrew after the installer subprocess" {
+    # The regression this guards: osx-package-install.sh runs via `bash ./...`,
+    # so the PATH it sets up dies with that child and the stow step below could
+    # not see the stow brew had just installed.
+    run grep -n "brew_shellenv" "${PROJECT_ROOT}/bootstrap.sh"
+    assert_success
+    refute_output ""
+}
+
+@test "brew_shellenv is available to bootstrap, not just the installer" {
+    # It lives in tools/brew_env.sh precisely so both can source it.
+    run type -t brew_shellenv
+    assert_output "function"
+}
+
 @test "bootstrap no longer calls zinit" {
     # zinit is a zsh function; this script runs under bash, so the old atuin
     # block could never have executed.
