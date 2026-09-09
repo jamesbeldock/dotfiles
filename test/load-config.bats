@@ -207,26 +207,28 @@ load_packages() {
     assert_array_contains CASKS_TO_INSTALL "font-fira-code-nerd-font"
     assert_array_contains CASKS_TO_INSTALL "iterm2"
     assert_array_contains CASKS_TO_INSTALL "wezterm"
+    assert_array_contains CASKS_TO_INSTALL "ghostty"
     assert_array_contains CASKS_TO_INSTALL "docker"
     assert_array_contains CASKS_TO_INSTALL "1password"
 }
 
-@test "macos workstation cask count is 14 (2 fonts + 12 apps)" {
+@test "macos workstation cask count is 15 (2 fonts + 13 apps)" {
     load_packages --set workstation --platform macos --type casks
-    assert_array_length CASKS_TO_INSTALL 14
+    assert_array_length CASKS_TO_INSTALL 15
 }
 
 # --- Stow packages ---
 
-@test "stow workstation has 12 packages" {
+@test "stow workstation has 13 packages" {
     load_packages --set workstation --type stow
     assert_array_contains PACKAGE "basic"
     assert_array_contains PACKAGE "config resources"
+    assert_array_contains PACKAGE "ghostty"
     assert_array_contains PACKAGE "iterm2"
     assert_array_contains PACKAGE "nushell"
     assert_array_contains PACKAGE "oh-my-zsh"
     assert_array_contains PACKAGE "wezterm"
-    assert_array_length PACKAGE 12
+    assert_array_length PACKAGE 13
 }
 
 @test "stow server has 8 packages" {
@@ -241,6 +243,7 @@ load_packages() {
     load_packages --set server --type stow
     assert_array_not_contains PACKAGE "iterm2"
     assert_array_not_contains PACKAGE "wezterm"
+    assert_array_not_contains PACKAGE "ghostty"
     assert_array_not_contains PACKAGE "oh-my-zsh"
 }
 

@@ -28,7 +28,7 @@ files in `config/sets/`, so `--list` is always the authoritative answer.
 | `iot` | yes | — | 6 | Basic tools, core utils, and the usual CLI kit (tmux, zsh, nvim) |
 | `lxc` | yes | — | 6 | Minimal tools, core utils, LXC-specific bits |
 | `server` | yes | yes | 8 | `iot` plus network/security tools and general utilities |
-| `workstation` | yes | yes | 12 | Everything, including GUI casks and Nerd Fonts |
+| `workstation` | yes | yes | 13 | Everything, including GUI casks and Nerd Fonts |
 
 `iot` and `lxc` declare no macOS packages. Running them on a Mac is not an
 error — the installer prints a skip message and moves on to stowing.

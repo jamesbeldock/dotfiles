@@ -124,6 +124,7 @@ groups:
     packages:
       - name: iterm2
       - name: wezterm
+      - name: ghostty
       - name: alfred
       - name: spotify
       - name: docker
