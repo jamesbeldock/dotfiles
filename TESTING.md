@@ -9,6 +9,11 @@ This repository uses two test runners, split by what is under test:
   logic inside `tools/load_config.py` and `tools/validate_config.py`, imported
   and called directly.
 
+A third suite, **[Playwright](https://playwright.dev/python/)** (`web/test/`),
+drives the web app in a real browser. It sits outside `pytest.ini`'s
+`testpaths` because it needs a built frontend and a downloaded Chromium, so a
+bare `pytest` never picks it up — see [Web UI tests](#web-ui-tests).
+
 The split is deliberate and narrow. BATS can source a bash script and inspect
 its arrays, which is most of what needs testing here; pytest can reach the
 Python edge cases (empty inputs, malformed config, argparse error paths)
@@ -109,6 +114,36 @@ pytest test/python/test_load_config.py        # one file
 pytest -k "platform_override"                 # by name
 pytest -v                                     # per-test output
 ```
+
+## Web UI tests
+
+`web/test/` drives the FastAPI app and its React frontend in headless
+Chromium. It needs more setup than the other two suites:
+
+```bash
+pip install -r web/api/requirements.txt pytest playwright pytest-playwright
+python -m playwright install chromium
+(cd web/frontend && npm ci && npm run build)   # main.py only mounts dist/ if it exists
+
+pytest web/test -q
+```
+
+The suite runs against the **real repository** — it lists your actual stow
+packages. Tests that create or delete files use the `scratch_package` fixture,
+which makes a throwaway package directory and removes it in teardown even when
+the test fails, so nothing is left behind for `stow` to link into `$HOME`.
+
+To skip the suite where Chromium cannot start:
+
+```bash
+SKIP_UI_TESTS=1 pytest web/test
+```
+
+CI runs it as the separate `Playwright UI Tests` job, which has the same two
+off switches: set the `RUN_UI_TESTS` repository variable to `false`, or untick
+"Run the Playwright UI suite" on a manual `workflow_dispatch`. The flag only
+skips — it never converts a browser failure into a pass, so a genuinely broken
+suite still goes red.
 
 ## Test Architecture
 

@@ -1,5 +1,6 @@
 """Shared fixtures for Playwright UI tests."""
 import multiprocessing
+import os
 import shutil
 import socket
 import time
@@ -57,7 +58,15 @@ def server_url():
 
 @pytest.fixture(scope="session")
 def browser():
-    """Launch a headless Chromium browser for the test session."""
+    """Launch a headless Chromium browser for the test session.
+
+    Set SKIP_UI_TESTS=1 to skip the whole suite where Chromium cannot start —
+    a restricted Mach bootstrap namespace, for instance, fails with
+    "bootstrap_check_in ...: Permission denied" before any test runs.
+    """
+    if os.environ.get("SKIP_UI_TESTS"):
+        pytest.skip("SKIP_UI_TESTS is set")
+
     pw = sync_playwright().start()
     b = pw.chromium.launch(headless=True)
     yield b

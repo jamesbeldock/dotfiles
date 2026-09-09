@@ -5,6 +5,12 @@ on:
     branches: ["**"]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      run_ui_tests:
+        description: "Run the Playwright UI suite"
+        type: boolean
+        default: true
 
 jobs:
   test-linux:
@@ -28,11 +34,11 @@ jobs:
       - name: Run pytest tests
         run: pytest
 
-      # starship/atuin/zoxide are not installed here, so the vendor autoload
-      # generation tests skip. The macOS job below is what covers them.
       - name: Install GNU Stow
         run: sudo apt-get update && sudo apt-get install -y stow
 
+      # starship/atuin/zoxide are not installed here, so the vendor autoload
+      # generation tests skip. The macOS job below is what covers them.
       - name: Run BATS tests
         run: ./test/libs/bats-core/bin/bats test/
 
@@ -81,3 +87,50 @@ jobs:
 
       - name: Run BATS tests
         run: ./test/libs/bats-core/bin/bats test/
+
+  test-ui:
+    name: Playwright UI Tests
+    runs-on: ubuntu-latest
+    # Two off switches, so a browser that will not start cannot block the rest
+    # of the suite:
+    #   - set the RUN_UI_TESTS repository variable to "false" (Settings ->
+    #     Secrets and variables -> Actions -> Variables), or
+    #   - untick "Run the Playwright UI suite" on a manual workflow_dispatch.
+    # Locally the equivalent is SKIP_UI_TESTS=1, which conftest.py honours.
+    if: >-
+      vars.RUN_UI_TESTS != 'false' &&
+      (github.event_name != 'workflow_dispatch' || inputs.run_ui_tests)
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.x'
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/frontend/package-lock.json
+
+      # main.py only mounts the SPA when web/frontend/dist exists, and dist is
+      # not tracked, so the tests get a blank page without a build first.
+      - name: Build the frontend
+        working-directory: web/frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install Python dependencies
+        run: pip install -r web/api/requirements.txt pytest playwright pytest-playwright
+
+      - name: Install Chromium
+        run: python -m playwright install --with-deps chromium
+
+      # web/test is outside pytest.ini's testpaths, so it has to be named.
+      - name: Run Playwright UI tests
+        run: pytest web/test -q
