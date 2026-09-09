@@ -172,3 +172,34 @@ stub_stow() {
     assert_failure
     assert_output --partial "Failed to stow 2 of 3 package(s): alpha gamma"
 }
+
+# --- Missing stow ---
+#
+# A clean-Mac bootstrap where Homebrew never came up leaves stow uninstalled.
+# That used to print "stow: command not found" once per package; check once and
+# say something actionable instead.
+
+@test "execute_stow reports missing stow once and stops" {
+    MODE="test"
+    PRIV_MODE="test"
+    PACKAGE=(alpha beta gamma)
+    stow_available() { return 1; }
+
+    run execute_stow
+    assert_failure
+    assert_output --partial "GNU Stow is not installed"
+    assert_output --partial "brew install stow"
+    # One message, not one per package, and no package attempted.
+    assert_equal "$(grep -c 'GNU Stow is not installed' <<<"$output")" "1"
+    refute_output --partial "Stowing package:"
+}
+
+@test "execute_stow proceeds normally when stow is available" {
+    MODE="test"
+    PRIV_MODE="test"
+    PACKAGE=(alpha)
+    stub_stow
+    run execute_stow
+    assert_success
+    assert_output --partial "All packages stowed successfully."
+}

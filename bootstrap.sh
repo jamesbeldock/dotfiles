@@ -55,30 +55,67 @@ detect_os() {
 	return 0
 }
 
+# link_eza_theme: points ~/.eza/theme.yml at the stowed tokyonight theme.
+# The theme arrives with the "config resources" package, and ~/.eza does not
+# exist on a new machine, so both the directory and a re-run have to be handled.
+link_eza_theme() {
+	local theme="$HOME/.config/resources/tokyonight.yml"
+	if [ ! -f "$theme" ]; then
+		echo "Skipping eza theme: $theme not found (is 'config resources' stowed?)" >&2
+		return 1
+	fi
+	mkdir -p "$HOME/.eza"
+	ln -sfn "$theme" "$HOME/.eza/theme.yml"
+	echo "Linked eza theme: $HOME/.eza/theme.yml -> $theme"
+}
+
+# clone_if_missing: git clone unless the destination is already there.
+# Args: $1 = repository URL, $2 = destination directory
+# A plain `git clone` fails on any re-run, which is what made bootstrap noisy
+# the second time through.
+clone_if_missing() {
+	local url="$1" dest="$2"
+	if [ -d "$dest" ]; then
+		echo "Already present, skipping clone: $dest"
+		return 0
+	fi
+	mkdir -p "$(dirname "$dest")"
+	git clone "$url" "$dest"
+}
+
 # execute_bootstrap: runs child scripts and post-install tasks.
+# Returns 1 if package installation failed.
 execute_bootstrap() {
 	# source ./shell.sh #TODO: fix this for Linux
+	local rc=0
 	if [[ "$OS_TYPE" == "darwin" ]]; then
-		bash ./osx-package-install.sh "$MODE"
+		bash ./osx-package-install.sh "$MODE" || rc=$?
 	elif [[ "$OS_TYPE" == "linux" ]]; then
-		bash ./linux-apt-package-install.sh "$MODE"
+		bash ./linux-apt-package-install.sh "$MODE" || rc=$?
+	fi
+
+	# Stowing needs the packages that step installs — stow itself, above all.
+	# Carrying on regardless produced one "stow: command not found" per package
+	# and buried the real error hundreds of lines up.
+	if [ $rc -ne 0 ]; then
+		echo "Package installation failed (exit $rc). Stopping before stow." >&2
+		echo "Nothing has been symlinked; fix the errors above and re-run." >&2
+		return 1
 	fi
 
 	bash ./stow-packages.sh "$MODE"
 
-	#atuin installation and stow package
-	zinit ice as"command" from"gh-r" bpick"atuin-*.tar.gz" mv"atuin*/atuin -> atuin" \
-		atclone"./atuin init zsh > init.zsh; ./atuin gen-completions --shell zsh > _atuin" \
-		atpull"%atclone" src"init.zsh"
-	zinit light atuinsh/atuin
-	stow_package "$SCRIPT_DIR" "$HOME" atuin
+	# atuin's config lives in a stow package that no set lists, so link it here.
+	# The binary itself comes from the james_tools/lxc_tools brew formulae, and
+	# .zshrc runs `atuin init zsh` at startup — there used to be a `zinit`
+	# invocation here that installed a second copy from GitHub releases, but
+	# zinit is a zsh function and this script runs under bash, so it never once
+	# executed.
+	stow_require && stow_package "$SCRIPT_DIR" "$HOME" atuin
 
-	# install eza theme
-	ln -s ~/.config/resources/tokyonight.yml ~/.eza/theme.yml
-
-	# set up TPM (tmux plugin manager)
-	git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-	git clone https://github.com/2KAbhishek/tmux2k.git ~/.tmux/plugins/tmux2k
+	link_eza_theme
+	clone_if_missing https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
+	clone_if_missing https://github.com/2KAbhishek/tmux2k.git "$HOME/.tmux/plugins/tmux2k"
 }
 
 main() {
@@ -87,7 +124,7 @@ main() {
 	if [ $rc -eq 1 ]; then exit 0; fi
 	if [ $rc -eq 2 ]; then exit 1; fi
 	detect_os || exit 1
-	execute_bootstrap
+	execute_bootstrap || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

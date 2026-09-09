@@ -26,6 +26,23 @@ STOW_TTY="${STOW_TTY:-/dev/tty}"
 STOW_KEPT_TARGETS=()
 STOW_KEPT_STASHES=()
 
+# stow_available: true when GNU Stow is on PATH.
+# A function so callers can check once instead of letting every package fail,
+# and so tests can stub it.
+stow_available() {
+	command -v stow >/dev/null 2>&1
+}
+
+# stow_require: prints an actionable message and returns 1 if stow is missing.
+stow_require() {
+	if stow_available; then
+		return 0
+	fi
+	echo "GNU Stow is not installed, so nothing can be symlinked." >&2
+	echo "Install it (brew install stow, or apt-get install stow) and re-run." >&2
+	return 1
+}
+
 # stow_simulate: dry-runs stow and prints its combined output.
 # Args: $1 = stow dir, $2 = target dir, $3 = package
 # Returns stow's exit code (non-zero when it would hit a conflict).

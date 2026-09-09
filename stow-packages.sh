@@ -56,6 +56,7 @@ detect_privilege() {
 # Returns 1 if any package failed or the user quit.
 execute_stow() {
 	echo "Privilege mode: $PRIV_MODE"
+	stow_require || return 1
 	echo "Stowing packages in $MODE mode..."
 	FAILED_PACKAGES=()
 	local rc

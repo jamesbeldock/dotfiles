@@ -331,3 +331,20 @@ MKDIR: .config"
     assert_success
     assert_equal "$(cat "$TARGET_DIR/.f")" "mine"
 }
+
+# --- Availability check ---
+
+@test "stow_require succeeds when stow is on PATH" {
+    stow_available() { return 0; }
+    run stow_require
+    assert_success
+    assert_output ""
+}
+
+@test "stow_require explains how to install a missing stow" {
+    stow_available() { return 1; }
+    run stow_require
+    assert_failure
+    assert_output --partial "GNU Stow is not installed"
+    assert_output --partial "apt-get install stow"
+}

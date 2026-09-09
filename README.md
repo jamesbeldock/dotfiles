@@ -166,10 +166,10 @@ container running as root.
    shows you the diff and asks which copy to keep (see below) instead of
    aborting. A package that fails for some other reason is reported and
    skipped rather than aborting the run, so you see every problem in one pass.
-4. **Post-install odds and ends** — atuin via zinit, the eza theme symlink, and
-   cloning TPM + tmux2k into `~/.tmux/plugins/`.
-
-Step 4 is the fragile part on a genuinely clean machine; see below.
+4. **Post-install odds and ends** — the atuin stow package, the eza theme
+   symlink, and cloning TPM + tmux2k into `~/.tmux/plugins/`. Each step creates
+   the directories it needs and skips work already done, so re-running is
+   quiet.
 
 ## Running the pieces individually
 
@@ -267,12 +267,16 @@ step 40:
   the file, so the repo's `.zshrc` has something in its way. You get the diff
   prompt described above; answering `n` backs up the two-line stub and links
   the real one.
-- **Step 4 of bootstrap assumes a warm machine.** It calls `zinit`, which
-  `.zshrc` installs on first zsh startup — so under `bash` on a clean box it is
-  not yet a command. It also `ln -s`s into `~/.eza/` and `git clone`s into
-  `~/.tmux/plugins/`, both of which fail if the directory is missing or already
-  populated. These are the last steps, so packages and symlinks are already in
-  place; finish them by hand or start a new zsh session and re-run.
+- **Bootstrap now stops if package installation fails.** It used to carry on to
+  the stow step regardless, which on a machine where Homebrew never came up
+  meant one `stow: command not found` per package and the real error buried
+  hundreds of lines earlier. Nothing is symlinked when the install step fails.
+- **Step 4 of bootstrap is re-runnable.** It used to assume a warm machine: it
+  called `zinit` (a zsh function, from a bash script — it never once ran), and
+  `ln -s`d into a `~/.eza/` that does not exist yet, and `git clone`d into
+  `~/.tmux/plugins/` even when already populated. The `zinit` block is gone —
+  atuin comes from the brew formula and `.zshrc` initialises it — and the other
+  two create what they need and skip what is already there.
 - **`shell.sh` is not wired in.** `bootstrap.sh` has the call commented out
   pending a Linux fix, so Oh My Zsh and the default-shell change do not happen
   automatically. Run it by hand on macOS if you want them.

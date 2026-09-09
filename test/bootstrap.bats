@@ -105,3 +105,88 @@ setup() {
     [ "$status" -eq 1 ]
     assert_output --partial "Unsupported OS"
 }
+
+# --- Post-install steps ---
+#
+# Both of these failed on every clean machine: ~/.eza does not exist yet, and
+# a plain `git clone` errors out on any re-run. Each test points HOME at a
+# throwaway directory so nothing touches the real one.
+
+fake_home() {
+    FAKE_HOME="$(mktemp -d)"
+    HOME="$FAKE_HOME"
+}
+
+stow_theme() {
+    mkdir -p "$FAKE_HOME/.config/resources"
+    touch "$FAKE_HOME/.config/resources/tokyonight.yml"
+}
+
+# Runs after every test in this file, so it must not report failure for the
+# ones that never called fake_home.
+teardown() {
+    if [ -n "${FAKE_HOME:-}" ]; then
+        rm -rf "$FAKE_HOME"
+    fi
+}
+
+@test "link_eza_theme creates ~/.eza and links the theme" {
+    fake_home
+    stow_theme
+
+    run link_eza_theme
+    assert_success
+    [ -L "$FAKE_HOME/.eza/theme.yml" ]
+    assert_equal "$(readlink "$FAKE_HOME/.eza/theme.yml")" \
+        "$FAKE_HOME/.config/resources/tokyonight.yml"
+}
+
+@test "link_eza_theme is safe to run twice" {
+    fake_home
+    stow_theme
+
+    link_eza_theme
+    run link_eza_theme
+    assert_success
+    [ -L "$FAKE_HOME/.eza/theme.yml" ]
+}
+
+@test "link_eza_theme skips with a reason when the theme is not stowed" {
+    fake_home
+
+    run link_eza_theme
+    assert_failure
+    assert_output --partial "config resources"
+    [ ! -e "$FAKE_HOME/.eza/theme.yml" ]
+}
+
+@test "clone_if_missing skips a destination that already exists" {
+    fake_home
+    mkdir -p "$FAKE_HOME/.tmux/plugins/tpm"
+    # A real clone would fail here; the stub proves git is never reached.
+    git() { echo "GIT_CALLED"; return 1; }
+
+    run clone_if_missing https://example.invalid/repo "$FAKE_HOME/.tmux/plugins/tpm"
+    assert_success
+    assert_output --partial "Already present"
+    refute_output --partial "GIT_CALLED"
+}
+
+@test "clone_if_missing creates the parent directory before cloning" {
+    fake_home
+    git() { echo "GIT_CALLED"; mkdir -p "${@: -1}"; }
+
+    run clone_if_missing https://example.invalid/repo "$FAKE_HOME/.tmux/plugins/tpm"
+    assert_success
+    assert_output --partial "GIT_CALLED"
+    [ -d "$FAKE_HOME/.tmux/plugins" ]
+}
+
+@test "bootstrap no longer calls zinit" {
+    # zinit is a zsh function; this script runs under bash, so the old atuin
+    # block could never have executed.
+    run grep -c "zinit" "${PROJECT_ROOT}/bootstrap.sh"
+    refute_output "0"
+    run grep -nE "^[[:space:]]*zinit " "${PROJECT_ROOT}/bootstrap.sh"
+    assert_output ""
+}

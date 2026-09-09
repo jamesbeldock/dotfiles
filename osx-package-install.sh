@@ -115,11 +115,44 @@ CASK_APPS=(
 	"flux-app"
 )
 
+# brew_shellenv: puts an already-installed Homebrew on PATH for this shell.
+# Args: candidate brew paths (defaults to the Apple Silicon and Intel prefixes).
+# Returns 1 if none of them exist.
+#
+# The installer writes /etc/paths.d/homebrew, but that is only read when a new
+# login shell starts. Without this, every brew call in the same run fails with
+# "command not found" on a machine that did not already have Homebrew.
+brew_shellenv() {
+	local candidates=("$@")
+	if [ ${#candidates[@]} -eq 0 ]; then
+		candidates=(/opt/homebrew/bin/brew /usr/local/bin/brew)
+	fi
+
+	local candidate
+	for candidate in "${candidates[@]}"; do
+		if [ -x "$candidate" ]; then
+			eval "$("$candidate" shellenv)"
+			return 0
+		fi
+	done
+	return 1
+}
+
 # ensure_brew: checks for brew, installs if missing, runs update/upgrade.
+# Sets BREW_PREFIX. Returns 1 if brew cannot be made usable, because every
+# caller below builds paths from BREW_PREFIX — an empty one turns
+# "${BREW_PREFIX}/bin/sha256sum" into "/bin/sha256sum".
 ensure_brew() {
 	if ! command -v brew &>/dev/null; then
 		echo "Homebrew is not installed. Installing Homebrew..."
 		/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+		brew_shellenv
+	fi
+
+	if ! command -v brew &>/dev/null; then
+		echo "Homebrew is still not on PATH after installing it." >&2
+		echo 'Open a new terminal, or run: eval "$(/opt/homebrew/bin/brew shellenv)"' >&2
+		return 1
 	fi
 
 	# Make sure we're using the latest Homebrew.
@@ -130,6 +163,11 @@ ensure_brew() {
 
 	# Save Homebrew's installed location.
 	BREW_PREFIX=$(brew --prefix)
+	if [ -z "$BREW_PREFIX" ]; then
+		echo "Could not determine the Homebrew prefix (brew --prefix returned nothing)." >&2
+		return 1
+	fi
+	return 0
 }
 
 # parse_args: sets MODE, FORMULAE_TO_INSTALL, CASKS_TO_INSTALL from YAML config.
@@ -194,8 +232,9 @@ done
 		fi
 	done
 
-	# Create symlink for sha256sum
-	if [ ! -L "${BREW_PREFIX}/bin/sha256sum" ]; then
+	# Create symlink for sha256sum. Guarded on the source existing: coreutils
+	# may not be in this set, and a missing one used to aim the symlink at /bin.
+	if [ -x "${BREW_PREFIX}/bin/gsha256sum" ] && [ ! -L "${BREW_PREFIX}/bin/sha256sum" ]; then
 		ln -s "${BREW_PREFIX}/bin/gsha256sum" "${BREW_PREFIX}/bin/sha256sum"
 	fi
 
@@ -217,7 +256,7 @@ main() {
 	if [ $rc -eq 1 ]; then exit 0; fi
 	if [ $rc -eq 2 ]; then exit 1; fi
 	if [ $rc -eq 3 ]; then exit 0; fi
-	ensure_brew
+	ensure_brew || exit 1
 	execute_install
 }
 
