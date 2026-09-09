@@ -140,6 +140,7 @@ stow_packages:
   - basic
   - config resources
   - fastfetch
+  - ghostty
   - git
   - iterm2
   - karabiner
