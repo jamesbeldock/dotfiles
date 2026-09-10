@@ -177,7 +177,8 @@ stow directory and `$HOME`; they skip when `stow` is not installed.
 | `stow-packages.sh`            | Arg parsing, mode setting, PACKAGE arrays for all 4 modes, privilege detection |
 | `linux-apt-package-install.sh` | Arg parsing, mode setting, all 7 file-scope arrays, package assembly for all 4 modes, privilege detection |
 | `osx-package-install.sh`       | Arg parsing (incl. iot early exit), mode setting, file-scope arrays, formulae/cask assembly for server and workstation |
-| `bootstrap.sh`                 | Arg parsing, mode setting, OS detection with mocked OSTYPE           |
+| `bootstrap.sh`                 | Arg parsing, mode setting, OS detection with mocked OSTYPE, and the Python dependency preflight aborting `--help`/`--list`/a real set alike |
+| `tools/discover_sets.sh`       | Set discovery and validation against the real config, `is_valid_set` matching, `check_set_platform` per set and platform, and the failure paths: `require_python_deps` on a missing module or missing interpreter, and a loader that exits non-zero being reported as a loader fault rather than an empty config |
 | `tools/stow_conflicts.sh`      | Parsing each of stow's conflict messages, mapping a target back to its `dot-` prefixed repo file, diff summaries (line counts, identical files, directories, symlinks, truncation), the prompt's answers and re-prompting, and end-to-end backup/skip/quit against a real `stow` in a sandbox |
 | `nushell` package              | Stow layout, env.nu/config.nu content, live `nu` parse, and real vendor-autoload generation against a throwaway `$nu.data-dir` |
 

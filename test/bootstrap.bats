@@ -34,6 +34,36 @@ setup() {
     assert_output --partial "Invalid option"
 }
 
+# --- Python dependency preflight ---
+#
+# bootstrap.sh is the entry point for a machine that has nothing on it, but it
+# needs a python3 with PyYAML to read config/. Without the preflight, that
+# machine's first output is a traceback from a file it has never heard of.
+
+@test "parse_args aborts with an actionable message when the Python deps are missing" {
+    require_python_deps() {
+        echo "Error: python3 is missing required module(s): yaml" >&2
+        return 1
+    }
+    run parse_args workstation
+    [ "$status" -eq 2 ]
+    assert_output --partial "missing required module"
+}
+
+@test "parse_args checks the deps before --list, not just before a real set" {
+    require_python_deps() { return 1; }
+    run parse_args --list
+    [ "$status" -eq 2 ]
+    refute_output --partial "Available sets:"
+}
+
+@test "parse_args checks the deps before --help" {
+    require_python_deps() { return 1; }
+    run parse_args --help
+    [ "$status" -eq 2 ]
+    refute_output --partial "Usage:"
+}
+
 # --- Dynamic set discovery ---
 
 @test "parse_args help shows available sets dynamically" {

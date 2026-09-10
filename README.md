@@ -61,8 +61,8 @@ submodules. If you already cloned without it, run
 **This step is required, and bootstrap fails without it.** The install scripts
 read `config/*.yaml` by shelling out to `python3 tools/load_config.py`, which
 imports PyYAML and jsonschema. macOS ships `python3` but not those packages, so
-a clean machine dies at the first step with `ModuleNotFoundError: No module
-named 'yaml'` followed by a misleading `Error: No config sets found`.
+`bootstrap.sh` checks for them before it does anything else and stops with
+instructions if they are missing.
 
 A virtualenv is the tidiest fix — activating it puts the right `python3` first
 on `PATH`, which is all the scripts care about:
@@ -79,8 +79,16 @@ Confirm it took before going further:
 bash bootstrap.sh --list      # => Available sets: iot lxc server workstation
 ```
 
-If that prints a traceback instead, the `python3` on your `PATH` still lacks
-the dependencies.
+If that prints `python3 is missing required module(s)` instead, the `python3`
+on your `PATH` is still the wrong one — check that the venv is active.
+
+Behind a TLS-intercepting proxy, `pip` fails with `CERTIFICATE_VERIFY_FAILED`
+because its bundled certificate store has no corporate CA. Point it at the
+system bundle instead:
+
+```bash
+pip install --cert /etc/ssl/cert.pem -r tools/requirements.txt
+```
 
 ### 4. Bootstrap
 
