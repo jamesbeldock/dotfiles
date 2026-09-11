@@ -34,6 +34,26 @@ setup() {
     assert_output --partial "Invalid option"
 }
 
+# --- Python dependency preflight ---
+
+@test "parse_args aborts when the Python deps are missing" {
+    require_python_deps() {
+        echo "Error: python3 is missing required module(s): yaml" >&2
+        return 1
+    }
+    run parse_args workstation
+    [ "$status" -eq 2 ]
+    assert_output --partial "missing required module"
+}
+
+@test "parse_args returns 2, not 0, when the stow list cannot be loaded" {
+    # PACKAGE used to be whatever a failed eval left behind, and parse_args
+    # returned 0 regardless -- so execute_stow ran against a stale or empty list.
+    load_config_array() { return 1; }
+    run parse_args workstation
+    [ "$status" -eq 2 ]
+}
+
 # --- Dynamic set discovery ---
 
 @test "parse_args help shows available sets dynamically" {

@@ -6,6 +6,11 @@ source "$SCRIPT_DIR/tools/discover_sets.sh"
 # parse_args: sets MODE and PACKAGES_TO_INSTALL from YAML config.
 # Returns 0 on success, 1 for help/list, 2 for invalid arg, 3 for platform skip.
 parse_args() {
+    # Runnable on its own (README: "bash linux-apt-package-install.sh iot"), so
+    # it checks the config tooling's dependencies for itself rather than relying
+    # on bootstrap.sh having done it.
+    require_python_deps || return 2
+
     if [ "$1" = "--list" ]; then
         discover_sets "$SCRIPT_DIR" || return 2
         echo "Available sets: ${AVAILABLE_SETS[*]}"
@@ -27,8 +32,10 @@ parse_args() {
         return 2
     fi
 
-    # Check this set has linux config
-    check_set_platform "$SCRIPT_DIR" "$1" "linux"
+    # Check this set has linux config. A failed check is not the same as "no
+    # linux section" -- treating it as one would return 3, which main reads as
+    # "nothing to do here" and exits 0 on.
+    check_set_platform "$SCRIPT_DIR" "$1" "linux" || return 2
     if [ "$HAS_PLATFORM" != "true" ]; then
         echo "Set '$1' has no Linux package configuration. Nothing to install."
         return 3
@@ -40,7 +47,8 @@ parse_args() {
     fi
 
     MODE="$1"
-    eval "$(python3 "$SCRIPT_DIR/tools/load_config.py" --set "$MODE" --platform linux)"
+    load_config_array "$SCRIPT_DIR" PACKAGES_TO_INSTALL \
+        --set "$MODE" --platform linux || return 2
     return 0
 }
 

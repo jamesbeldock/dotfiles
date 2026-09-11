@@ -157,6 +157,49 @@ setup() {
     assert_equal "$HAS_PLATFORM" ""
 }
 
+# --- load_config_array ---
+
+@test "load_config_array populates the named array" {
+    load_config_array "$PROJECT_ROOT" PACKAGE --set server --type stow
+    assert_array_contains PACKAGE "zsh"
+}
+
+@test "load_config_array accepts an empty array as a real answer" {
+    # iot has no macos section, so the cask list is legitimately empty.
+    load_config_array "$PROJECT_ROOT" CASKS_TO_INSTALL \
+        --set iot --platform macos --type casks
+    assert_array_length CASKS_TO_INSTALL 0
+}
+
+@test "load_config_array fails and clears the array when the loader errors" {
+    PACKAGE=(leftover)
+    run load_config_array "$PROJECT_ROOT" PACKAGE --set nosuchset --type stow
+    assert_failure
+    assert_output --partial "load_config.py --set nosuchset --type stow failed"
+
+    load_config_array "$PROJECT_ROOT" PACKAGE --set nosuchset --type stow || true
+    assert_array_length PACKAGE 0
+}
+
+@test "load_config_array fails when the loader assigns nothing" {
+    local tmpdir
+    tmpdir="$(mktemp -d)"
+    mkdir -p "$tmpdir/tools"
+    printf '%s\n' 'print("# no assignment here")' > "$tmpdir/tools/load_config.py"
+
+    run load_config_array "$tmpdir" PACKAGE --set server --type stow
+    assert_failure
+    assert_output --partial "did not set PACKAGE"
+    rm -rf "$tmpdir"
+}
+
+@test "load_config_array points at the venv fix when the deps are missing" {
+    python3() { return 1; }
+    run load_config_array "$PROJECT_ROOT" PACKAGE --set server --type stow
+    assert_failure
+    assert_output --partial "pip install -r tools/requirements.txt"
+}
+
 # --- validate_configs ---
 
 @test "validate_configs passes on valid configs" {

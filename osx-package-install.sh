@@ -151,6 +151,11 @@ ensure_brew() {
 # parse_args: sets MODE, FORMULAE_TO_INSTALL, CASKS_TO_INSTALL from YAML config.
 # Returns 0 on success, 1 for help/list, 2 for invalid arg, 3 for platform skip.
 parse_args() {
+	# Runnable on its own (README: "bash osx-package-install.sh server"), so it
+	# checks the config tooling's dependencies for itself rather than relying on
+	# bootstrap.sh having done it.
+	require_python_deps || return 2
+
 	if [ "$1" = "--list" ]; then
 		discover_sets "$SCRIPT_DIR" || return 2
 		echo "Available sets: ${AVAILABLE_SETS[*]}"
@@ -172,8 +177,10 @@ parse_args() {
 		return 2
 	fi
 
-	# Check if this set supports macOS
-	check_set_platform "$SCRIPT_DIR" "$1" "macos"
+	# Check if this set supports macOS. A failed check is not the same as "no
+	# macos section" -- treating it as one would return 3, which main reads as
+	# "nothing to do here" and exits 0 on.
+	check_set_platform "$SCRIPT_DIR" "$1" "macos" || return 2
 	if [ "$HAS_PLATFORM" != "true" ]; then
 		echo "Set '$1' is not applicable on macOS (no macos configuration). Skipping."
 		return 3
@@ -185,8 +192,10 @@ parse_args() {
 	fi
 
 	MODE="$1"
-	eval "$(python3 "$SCRIPT_DIR/tools/load_config.py" --set "$MODE" --platform macos --type formulae)"
-	eval "$(python3 "$SCRIPT_DIR/tools/load_config.py" --set "$MODE" --platform macos --type casks)"
+	load_config_array "$SCRIPT_DIR" FORMULAE_TO_INSTALL \
+		--set "$MODE" --platform macos --type formulae || return 2
+	load_config_array "$SCRIPT_DIR" CASKS_TO_INSTALL \
+		--set "$MODE" --platform macos --type casks || return 2
 	return 0
 }
 

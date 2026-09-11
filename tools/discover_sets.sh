@@ -40,6 +40,39 @@ require_python_deps() {
 	return 0
 }
 
+# load_config_array: runs a load_config.py invocation that assigns a bash array
+# and checks that it worked, instead of eval-ing whatever came back.
+# Args: $1 = project root, $2 = name of the array the call should set,
+#       $3.. = arguments passed through to load_config.py
+# Returns 1 if the loader failed or did not set the named array. The array is
+# unset first, so a caller that ignores the return code cannot read a stale one.
+load_config_array() {
+	local script_dir="$1"
+	local var_name="$2"
+	shift 2
+	local output
+
+	unset "$var_name"
+
+	if ! output="$(python3 "$script_dir/tools/load_config.py" "$@")"; then
+		echo "Error: tools/load_config.py $* failed; could not read config/." >&2
+		require_python_deps >/dev/null 2>&1 || python_deps_hint
+		return 1
+	fi
+
+	eval "$output"
+
+	# An empty array is a legitimate answer -- a set can list no casks. Never
+	# having been assigned is not, and used to leave the caller iterating over
+	# whatever the variable held before.
+	if ! declare -p "$var_name" >/dev/null 2>&1; then
+		echo "Error: tools/load_config.py $* did not set $var_name." >&2
+		return 1
+	fi
+
+	return 0
+}
+
 # discover_sets: populates AVAILABLE_SETS array.
 # Args: $1 = project root (SCRIPT_DIR)
 # Returns 1 if the loader failed or no sets were found.
