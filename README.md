@@ -64,13 +64,12 @@ imports PyYAML and jsonschema. macOS ships `python3` but not those packages, so
 `bootstrap.sh` checks for them before it does anything else and stops with
 instructions if they are missing.
 
-A virtualenv is the tidiest fix — activating it puts the right `python3` first
-on `PATH`, which is all the scripts care about:
+Create a virtualenv at `.venv` in the repo root. The scripts look for it by
+path, so you do **not** need to activate it first:
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate
-pip install -r tools/requirements.txt
+.venv/bin/python3 -m pip install -r tools/requirements.txt
 ```
 
 Confirm it took before going further:
@@ -79,8 +78,25 @@ Confirm it took before going further:
 bash bootstrap.sh --list      # => Available sets: iot lxc server workstation
 ```
 
-If that prints `python3 is missing required module(s)` instead, the `python3`
-on your `PATH` is still the wrong one — check that the venv is active.
+Interpreter resolution order, if you need to override it:
+
+| Precedence | Source | Use for |
+| --- | --- | --- |
+| 1 | `$DOTFILES_PYTHON` | Pointing at a specific interpreter; also how the tests stub one |
+| 2 | `$VIRTUAL_ENV` | A venv you activated yourself, anywhere on disk |
+| 3 | `<repo>/.venv` | The default — no activation needed |
+| 4 | `python3` on `PATH` | Distros that package PyYAML and jsonschema system-wide |
+
+If it prints `is missing required module(s)`, the message names the exact
+interpreter it tried, which tells you which of the four rules above matched.
+
+On macOS, note that Homebrew's `python3` is externally managed (PEP 668), so
+`pip install pyyaml jsonschema` outside a venv is refused with
+`error: externally-managed-environment`. Neither package is available as a
+Homebrew formula, so the venv is the only option. Build `.venv` on Homebrew
+Python (`/opt/homebrew/bin/python3`) rather than on any other interpreter that
+happens to be on `PATH` — a venv rooted in a toolchain that gets upgraded or
+removed out from under you breaks bootstrap on a machine you were counting on.
 
 Behind a TLS-intercepting proxy, `pip` fails with `CERTIFICATE_VERIFY_FAILED`
 because its bundled certificate store has no corporate CA. Point it at the
@@ -141,13 +157,14 @@ Same requirement and same reason as macOS — see
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate
-pip install -r tools/requirements.txt
+.venv/bin/python3 -m pip install -r tools/requirements.txt
 bash bootstrap.sh --list      # => Available sets: iot lxc server workstation
 ```
 
 On distros that mark the system Python externally managed (PEP 668), the venv
-is not optional — a plain `pip install` into system Python is refused.
+is not optional — a plain `pip install` into system Python is refused. You may
+need `apt install python3-venv` first. As on macOS, activating `.venv` is
+optional; the scripts find it by path.
 
 ### 4. Bootstrap
 
@@ -296,9 +313,13 @@ Python tools, both run in CI on Linux and macOS. See [TESTING.md](TESTING.md)
 for prerequisites and how to run them.
 
 ```bash
-pip install -r tools/requirements-dev.txt
-pytest && ./test/libs/bats-core/bin/bats test/
+.venv/bin/python3 -m pip install -r tools/requirements-dev.txt
+.venv/bin/pytest && ./test/libs/bats-core/bin/bats test/
 ```
+
+The BATS suite resolves the interpreter the same way the scripts do, so it runs
+against `.venv` without being activated. `pytest` itself is not on `PATH` until
+you activate, hence the explicit `.venv/bin/pytest`.
 
 Nushell specifics — the config layout, what is ported from zsh, and how vendor
 autoload files are generated — are in [NUSHELL.md](NUSHELL.md).

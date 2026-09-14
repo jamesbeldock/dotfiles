@@ -61,22 +61,26 @@ python3 -m venv .venv
 `requirements-dev.txt` pulls in `requirements.txt` and adds pytest. If you only
 want to *run* the tools rather than test them, `requirements.txt` is enough.
 
-Activate it before running the suite, so the `python3` that
-`tools/load_config.py` runs under is the one with the dependencies:
+You do not need to activate it. Both the scripts and the BATS suite resolve the
+interpreter through `resolve_python` in `tools/discover_sets.sh`, which prefers
+`$DOTFILES_PYTHON`, then `$VIRTUAL_ENV`, then the repo-local `.venv`, then
+`python3` on `PATH`. Activating still works — it just matches on rule 2 instead
+of rule 3. `pytest` is the exception: the binary is only on `PATH` once the venv
+is active, so either activate or call `.venv/bin/pytest`.
 
-```bash
-source .venv/bin/activate
-```
+CI has no `.venv`, so it lands on the `PATH` rule via `actions/setup-python`
+plus `pip install -r tools/requirements-dev.txt` (see
+`.github/workflows/test.yml`).
 
-CI does the equivalent via `actions/setup-python` plus
-`pip install -r tools/requirements.txt` (see `.github/workflows/test.yml`).
+To point the suite at a different interpreter — or to stub one — set
+`DOTFILES_PYTHON`, which wins over everything else.
 
 ## Running Tests
 
 ### Run everything
 
 ```bash
-pytest && ./test/libs/bats-core/bin/bats test/
+.venv/bin/pytest && ./test/libs/bats-core/bin/bats test/
 ```
 
 ### Run all BATS tests

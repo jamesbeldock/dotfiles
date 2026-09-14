@@ -5,15 +5,53 @@ setup() {
     source "${PROJECT_ROOT}/tools/discover_sets.sh"
 }
 
+# --- resolve_python ---
+
+@test "resolve_python prefers the repo-local .venv over PATH" {
+    unset DOTFILES_PYTHON VIRTUAL_ENV
+    resolve_python
+    assert_equal "$PY" "${PROJECT_ROOT}/.venv/bin/python3"
+}
+
+@test "resolve_python honours an activated venv" {
+    unset DOTFILES_PYTHON
+    VIRTUAL_ENV="${PROJECT_ROOT}/.venv"
+    resolve_python
+    assert_equal "$PY" "${PROJECT_ROOT}/.venv/bin/python3"
+}
+
+@test "resolve_python honours an explicit DOTFILES_PYTHON override" {
+    DOTFILES_PYTHON=python3
+    resolve_python
+    assert_equal "$PY" "python3"
+}
+
+@test "resolve_python falls back to PATH when there is no venv" {
+    unset DOTFILES_PYTHON VIRTUAL_ENV
+    DOTFILES_ROOT="$(mktemp -d)"
+    resolve_python
+    assert_equal "$PY" "python3"
+    rm -rf "$DOTFILES_ROOT"
+}
+
 # --- require_python_deps ---
 
 @test "require_python_deps passes in an environment that has the deps" {
     require_python_deps
 }
 
+@test "require_python_deps passes without the venv activated" {
+    # The whole point of resolve_python: a clean shell that never ran
+    # `source .venv/bin/activate` still finds the deps.
+    unset DOTFILES_PYTHON VIRTUAL_ENV
+    require_python_deps
+}
+
 @test "require_python_deps names the missing module and prints the fix" {
     # find_spec returns None for the stubbed module, so load_config.py's imports
-    # would fail the same way.
+    # would fail the same way. The override keeps PY a bare word so the stub
+    # below is what actually gets called.
+    DOTFILES_PYTHON=python3
     python3() { echo "yaml"; }
     run require_python_deps
     assert_failure
@@ -22,6 +60,7 @@ setup() {
 }
 
 @test "require_python_deps reports a python3 that is missing entirely" {
+    DOTFILES_PYTHON=python3
     command() {
         if [[ "$1" == "-v" && "$2" == "python3" ]]; then return 1; fi
         builtin command "$@"
@@ -194,6 +233,7 @@ setup() {
 }
 
 @test "load_config_array points at the venv fix when the deps are missing" {
+    DOTFILES_PYTHON=python3
     python3() { return 1; }
     run load_config_array "$PROJECT_ROOT" PACKAGE --set server --type stow
     assert_failure
