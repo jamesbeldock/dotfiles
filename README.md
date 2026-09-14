@@ -323,3 +323,12 @@ you activate, hence the explicit `.venv/bin/pytest`.
 
 Nushell specifics — the config layout, what is ported from zsh, and how vendor
 autoload files are generated — are in [NUSHELL.md](NUSHELL.md).
+
+## License
+
+MIT — see [LICENSE](LICENSE). Copyright (c) 2021-2026 XECUTE Ventures LLC.
+
+Substantial portions originate in
+[mathiasbynens/dotfiles](https://github.com/mathiasbynens/dotfiles), also MIT,
+copyright (c) Mathias Bynens. Upstream contributors retain copyright in their
+own contributions; `git log` has the full attribution.
