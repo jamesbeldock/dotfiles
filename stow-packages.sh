@@ -8,6 +8,11 @@ source "$SCRIPT_DIR/tools/stow_conflicts.sh"
 # parse_args: sets MODE and PACKAGE array from YAML config.
 # Returns 0 on success, 1 for help/list, 2 for invalid arg.
 parse_args() {
+	# Runnable on its own (README: "bash stow-packages.sh workstation"), so it
+	# checks the config tooling's dependencies for itself rather than relying on
+	# bootstrap.sh having done it.
+	require_python_deps || return 2
+
 	if [[ "$1" == "--list" ]]; then
 		discover_sets "$SCRIPT_DIR" || return 2
 		echo "Available sets: ${AVAILABLE_SETS[*]}"
@@ -37,7 +42,7 @@ parse_args() {
 	fi
 
 	MODE="$1"
-	eval "$(python3 "$SCRIPT_DIR/tools/load_config.py" --set "$MODE" --type stow)"
+	load_config_array "$SCRIPT_DIR" PACKAGE --set "$MODE" --type stow || return 2
 	return 0
 }
 

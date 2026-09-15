@@ -34,6 +34,33 @@ setup() {
     assert_output --partial "Invalid option"
 }
 
+# --- Python dependency preflight ---
+
+@test "parse_args aborts when the Python deps are missing" {
+    require_python_deps() {
+        echo "Error: python3 is missing required module(s): yaml" >&2
+        return 1
+    }
+    run parse_args workstation
+    [ "$status" -eq 2 ]
+    assert_output --partial "missing required module"
+}
+
+@test "parse_args returns 2, not 0, when the package list cannot be loaded" {
+    load_config_array() { return 1; }
+    run parse_args workstation
+    [ "$status" -eq 2 ]
+}
+
+# A failed platform check must not masquerade as "no linux section": that
+# returns 3, which main treats as nothing-to-do and exits 0 on.
+@test "parse_args returns 2, not 3, when the platform check itself fails" {
+    check_set_platform() { HAS_PLATFORM=""; return 1; }
+    run parse_args workstation
+    [ "$status" -eq 2 ]
+    refute_output --partial "Nothing to install"
+}
+
 # --- Dynamic set discovery ---
 
 @test "parse_args help shows available sets dynamically" {

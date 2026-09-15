@@ -6,7 +6,7 @@ setup() {
 
 # Helper to load config output into a bash array
 load_packages() {
-    eval "$(python3 "${PROJECT_ROOT}/tools/load_config.py" "$@")"
+    eval "$("$PY" "${PROJECT_ROOT}/tools/load_config.py" "$@")"
 }
 
 # --- list-sets ---
@@ -30,7 +30,7 @@ load_packages() {
     local tmpdir
     tmpdir="$(mktemp -d)"
     mkdir -p "$tmpdir/sets"
-    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --list-sets --config-dir "$tmpdir")"
+    eval "$("$PY" "$PROJECT_ROOT/tools/load_config.py" --list-sets --config-dir "$tmpdir")"
     assert_array_length AVAILABLE_SETS 0
     rm -rf "$tmpdir"
 }
@@ -38,27 +38,27 @@ load_packages() {
 # --- check-platform ---
 
 @test "load_config.py --check-platform macos for server returns true" {
-    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --set server --check-platform macos)"
+    eval "$("$PY" "$PROJECT_ROOT/tools/load_config.py" --set server --check-platform macos)"
     assert_equal "$HAS_PLATFORM" "true"
 }
 
 @test "load_config.py --check-platform macos for iot returns false" {
-    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --set iot --check-platform macos)"
+    eval "$("$PY" "$PROJECT_ROOT/tools/load_config.py" --set iot --check-platform macos)"
     assert_equal "$HAS_PLATFORM" "false"
 }
 
 @test "load_config.py --check-platform macos for lxc returns false" {
-    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --set lxc --check-platform macos)"
+    eval "$("$PY" "$PROJECT_ROOT/tools/load_config.py" --set lxc --check-platform macos)"
     assert_equal "$HAS_PLATFORM" "false"
 }
 
 @test "load_config.py --check-platform linux for iot returns true" {
-    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --set iot --check-platform linux)"
+    eval "$("$PY" "$PROJECT_ROOT/tools/load_config.py" --set iot --check-platform linux)"
     assert_equal "$HAS_PLATFORM" "true"
 }
 
 @test "load_config.py --check-platform linux for workstation returns true" {
-    eval "$(python3 "$PROJECT_ROOT/tools/load_config.py" --set workstation --check-platform linux)"
+    eval "$("$PY" "$PROJECT_ROOT/tools/load_config.py" --set workstation --check-platform linux)"
     assert_equal "$HAS_PLATFORM" "true"
 }
 

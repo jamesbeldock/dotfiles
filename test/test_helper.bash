@@ -9,6 +9,12 @@ PROJECT_ROOT="$(cd "$TEST_DIR/.." && pwd)"
 load "${TEST_DIR}/libs/bats-support/load"
 load "${TEST_DIR}/libs/bats-assert/load"
 
+# Resolve PY the same way the shell helpers do, so tests that invoke tools/*.py
+# directly run under the repo venv without the suite having to be started from
+# an activated shell.
+source "${PROJECT_ROOT}/tools/discover_sets.sh"
+resolve_python
+
 # assert_array_contains ARRAY_NAME VALUE
 # Asserts that the named array contains the given value.
 assert_array_contains() {

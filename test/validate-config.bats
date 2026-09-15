@@ -5,7 +5,7 @@ setup() {
 }
 
 @test "validate_config.py exits 0 on valid configs" {
-    run python3 "${PROJECT_ROOT}/tools/validate_config.py"
+    run "$PY" "${PROJECT_ROOT}/tools/validate_config.py"
     assert_success
     assert_output --partial "All config files valid"
 }
@@ -23,7 +23,7 @@ linux:
   groups:
     - nonexistent_group
 EOF
-    run python3 "${PROJECT_ROOT}/tools/validate_config.py" --config-dir "$tmpdir"
+    run "$PY" "${PROJECT_ROOT}/tools/validate_config.py" --config-dir "$tmpdir"
     assert_failure
     assert_output --partial "unknown group"
     rm -rf "$tmpdir"
@@ -38,7 +38,7 @@ name: bad
 stow_packages:
   - nonexistent_package
 EOF
-    run python3 "${PROJECT_ROOT}/tools/validate_config.py" --config-dir "$tmpdir"
+    run "$PY" "${PROJECT_ROOT}/tools/validate_config.py" --config-dir "$tmpdir"
     assert_failure
     assert_output --partial "not in catalog"
     rm -rf "$tmpdir"
@@ -53,7 +53,7 @@ name: wrong_name
 stow_packages:
   - basic
 EOF
-    run python3 "${PROJECT_ROOT}/tools/validate_config.py" --config-dir "$tmpdir"
+    run "$PY" "${PROJECT_ROOT}/tools/validate_config.py" --config-dir "$tmpdir"
     assert_failure
     assert_output --partial "name mismatch"
     rm -rf "$tmpdir"
@@ -71,7 +71,7 @@ linux:
   groups:
     - cask_apps
 EOF
-    run python3 "${PROJECT_ROOT}/tools/validate_config.py" --config-dir "$tmpdir"
+    run "$PY" "${PROJECT_ROOT}/tools/validate_config.py" --config-dir "$tmpdir"
     assert_failure
     assert_output --partial "macos_only"
     rm -rf "$tmpdir"

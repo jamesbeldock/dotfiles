@@ -1,0 +1,55 @@
+{
+  "Custom 1": null,
+  "Custom 2": null,
+  "Custom 3": null,
+  "Custom 4": null,
+  "Custom 5": null,
+  "Default": {
+    "uvc_set": {
+      "exposure": "auto",
+      "zoom": 0,
+      "whitebalance": "auto",
+      "saturation": 64,
+      "hue": 8,
+      "contrast": 32,
+      "sharpness": 4,
+      "brightness": 10,
+      "pan": 0,
+      "tilt": 0,
+      "backlight": 4,
+      "roll": 0,
+      "gain": 10
+    },
+    "set_blur": {
+      "iteration": 7,
+      "edge_strength": 5,
+      "ratio": 0.75,
+      "mask_padding": 1,
+      "toggle": true
+    },
+    "set_cameraman": {
+      "speed": 1.5,
+      "zoom": 2.8000000000000003,
+      "offset_x": 0,
+      "offset_y": 0.5,
+      "toggle": true
+    },
+    "awb_gain": {
+      "b_gain": 128,
+      "g_gain": 128,
+      "r_gain": 128
+    },
+    "set_sharpen": {
+      "ratio": 0
+    },
+    "set_color_grading": {
+      "curve_gain": 0,
+      "curve_offset": 0,
+      "curve_gamma": 0,
+      "curve_lift": 0
+    },
+    "set_audio": {
+      "input_volume": 1
+    }
+  }
+}

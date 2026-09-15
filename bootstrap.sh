@@ -12,6 +12,12 @@ source "$SCRIPT_DIR/tools/stow_conflicts.sh"
 
 # parse_args: sets MODE. Returns 0 on success, 1 for help/list, 2 for invalid arg.
 parse_args() {
+	# Every path below shells out to tools/load_config.py, which imports PyYAML.
+	# This script is the "run me first on a new machine" entry point, but it does
+	# not create the venv those imports need, so check up front and say so --
+	# otherwise the first thing a clean machine sees is a Python traceback.
+	require_python_deps || return 2
+
 	if [[ "$1" == "--list" ]]; then
 		discover_sets "$SCRIPT_DIR" || return 2
 		echo "Available sets: ${AVAILABLE_SETS[*]}"

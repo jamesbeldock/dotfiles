@@ -5,6 +5,71 @@ setup() {
     source "${PROJECT_ROOT}/tools/discover_sets.sh"
 }
 
+# --- resolve_python ---
+
+@test "resolve_python prefers the repo-local .venv over PATH" {
+    unset DOTFILES_PYTHON VIRTUAL_ENV
+    resolve_python
+    assert_equal "$PY" "${PROJECT_ROOT}/.venv/bin/python3"
+}
+
+@test "resolve_python honours an activated venv" {
+    unset DOTFILES_PYTHON
+    VIRTUAL_ENV="${PROJECT_ROOT}/.venv"
+    resolve_python
+    assert_equal "$PY" "${PROJECT_ROOT}/.venv/bin/python3"
+}
+
+@test "resolve_python honours an explicit DOTFILES_PYTHON override" {
+    DOTFILES_PYTHON=python3
+    resolve_python
+    assert_equal "$PY" "python3"
+}
+
+@test "resolve_python falls back to PATH when there is no venv" {
+    unset DOTFILES_PYTHON VIRTUAL_ENV
+    DOTFILES_ROOT="$(mktemp -d)"
+    resolve_python
+    assert_equal "$PY" "python3"
+    rm -rf "$DOTFILES_ROOT"
+}
+
+# --- require_python_deps ---
+
+@test "require_python_deps passes in an environment that has the deps" {
+    require_python_deps
+}
+
+@test "require_python_deps passes without the venv activated" {
+    # The whole point of resolve_python: a clean shell that never ran
+    # `source .venv/bin/activate` still finds the deps.
+    unset DOTFILES_PYTHON VIRTUAL_ENV
+    require_python_deps
+}
+
+@test "require_python_deps names the missing module and prints the fix" {
+    # find_spec returns None for the stubbed module, so load_config.py's imports
+    # would fail the same way. The override keeps PY a bare word so the stub
+    # below is what actually gets called.
+    DOTFILES_PYTHON=python3
+    python3() { echo "yaml"; }
+    run require_python_deps
+    assert_failure
+    assert_output --partial "yaml"
+    assert_output --partial "pip install -r tools/requirements.txt"
+}
+
+@test "require_python_deps reports a python3 that is missing entirely" {
+    DOTFILES_PYTHON=python3
+    command() {
+        if [[ "$1" == "-v" && "$2" == "python3" ]]; then return 1; fi
+        builtin command "$@"
+    }
+    run require_python_deps
+    assert_failure
+    assert_output --partial "python3 is not on PATH"
+}
+
 # --- discover_sets ---
 
 @test "discover_sets populates AVAILABLE_SETS with all set files" {
@@ -33,6 +98,39 @@ setup() {
     cp "$PROJECT_ROOT/tools/load_config.py" "$tmpdir/tools/"
     run discover_sets "$tmpdir"
     assert_failure
+    assert_output --partial "No config sets found"
+    rm -rf "$tmpdir"
+}
+
+# A loader that cannot run is a different fault from a config directory with
+# nothing in it, and the two used to be indistinguishable: the exit code went
+# into a command substitution and only the empty array survived.
+@test "discover_sets blames the loader, not the config, when load_config.py fails" {
+    local tmpdir
+    tmpdir="$(mktemp -d)"
+    mkdir -p "$tmpdir/tools" "$tmpdir/config/sets"
+    printf '%s\n' \
+        'import sys' \
+        'print("ModuleNotFoundError: No module named \x27yaml\x27", file=sys.stderr)' \
+        'sys.exit(1)' > "$tmpdir/tools/load_config.py"
+
+    run discover_sets "$tmpdir"
+    assert_failure
+    assert_output --partial "tools/load_config.py failed"
+    refute_output --partial "No config sets found"
+    rm -rf "$tmpdir"
+}
+
+@test "discover_sets clears a previous result when the loader fails" {
+    local tmpdir
+    tmpdir="$(mktemp -d)"
+    mkdir -p "$tmpdir/tools"
+    printf '%s\n' 'import sys' 'sys.exit(1)' > "$tmpdir/tools/load_config.py"
+
+    discover_sets "$PROJECT_ROOT"
+    assert_array_contains AVAILABLE_SETS "workstation"
+    ! discover_sets "$tmpdir"
+    assert_array_length AVAILABLE_SETS 0
     rm -rf "$tmpdir"
 }
 
@@ -87,6 +185,59 @@ setup() {
 @test "check_set_platform returns true for iot on linux" {
     check_set_platform "$PROJECT_ROOT" "iot" "linux"
     assert_equal "$HAS_PLATFORM" "true"
+}
+
+@test "check_set_platform fails and clears HAS_PLATFORM on an unknown set" {
+    check_set_platform "$PROJECT_ROOT" "server" "linux"
+    assert_equal "$HAS_PLATFORM" "true"
+    run check_set_platform "$PROJECT_ROOT" "nosuchset" "linux"
+    assert_failure
+    check_set_platform "$PROJECT_ROOT" "nosuchset" "linux" || true
+    assert_equal "$HAS_PLATFORM" ""
+}
+
+# --- load_config_array ---
+
+@test "load_config_array populates the named array" {
+    load_config_array "$PROJECT_ROOT" PACKAGE --set server --type stow
+    assert_array_contains PACKAGE "zsh"
+}
+
+@test "load_config_array accepts an empty array as a real answer" {
+    # iot has no macos section, so the cask list is legitimately empty.
+    load_config_array "$PROJECT_ROOT" CASKS_TO_INSTALL \
+        --set iot --platform macos --type casks
+    assert_array_length CASKS_TO_INSTALL 0
+}
+
+@test "load_config_array fails and clears the array when the loader errors" {
+    PACKAGE=(leftover)
+    run load_config_array "$PROJECT_ROOT" PACKAGE --set nosuchset --type stow
+    assert_failure
+    assert_output --partial "load_config.py --set nosuchset --type stow failed"
+
+    load_config_array "$PROJECT_ROOT" PACKAGE --set nosuchset --type stow || true
+    assert_array_length PACKAGE 0
+}
+
+@test "load_config_array fails when the loader assigns nothing" {
+    local tmpdir
+    tmpdir="$(mktemp -d)"
+    mkdir -p "$tmpdir/tools"
+    printf '%s\n' 'print("# no assignment here")' > "$tmpdir/tools/load_config.py"
+
+    run load_config_array "$tmpdir" PACKAGE --set server --type stow
+    assert_failure
+    assert_output --partial "did not set PACKAGE"
+    rm -rf "$tmpdir"
+}
+
+@test "load_config_array points at the venv fix when the deps are missing" {
+    DOTFILES_PYTHON=python3
+    python3() { return 1; }
+    run load_config_array "$PROJECT_ROOT" PACKAGE --set server --type stow
+    assert_failure
+    assert_output --partial "pip install -r tools/requirements.txt"
 }
 
 # --- validate_configs ---

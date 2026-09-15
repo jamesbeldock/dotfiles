@@ -61,22 +61,26 @@ python3 -m venv .venv
 `requirements-dev.txt` pulls in `requirements.txt` and adds pytest. If you only
 want to *run* the tools rather than test them, `requirements.txt` is enough.
 
-Activate it before running the suite, so the `python3` that
-`tools/load_config.py` runs under is the one with the dependencies:
+You do not need to activate it. Both the scripts and the BATS suite resolve the
+interpreter through `resolve_python` in `tools/discover_sets.sh`, which prefers
+`$DOTFILES_PYTHON`, then `$VIRTUAL_ENV`, then the repo-local `.venv`, then
+`python3` on `PATH`. Activating still works — it just matches on rule 2 instead
+of rule 3. `pytest` is the exception: the binary is only on `PATH` once the venv
+is active, so either activate or call `.venv/bin/pytest`.
 
-```bash
-source .venv/bin/activate
-```
+CI has no `.venv`, so it lands on the `PATH` rule via `actions/setup-python`
+plus `pip install -r tools/requirements-dev.txt` (see
+`.github/workflows/test.yml`).
 
-CI does the equivalent via `actions/setup-python` plus
-`pip install -r tools/requirements.txt` (see `.github/workflows/test.yml`).
+To point the suite at a different interpreter — or to stub one — set
+`DOTFILES_PYTHON`, which wins over everything else.
 
 ## Running Tests
 
 ### Run everything
 
 ```bash
-pytest && ./test/libs/bats-core/bin/bats test/
+.venv/bin/pytest && ./test/libs/bats-core/bin/bats test/
 ```
 
 ### Run all BATS tests
@@ -174,10 +178,11 @@ stow directory and `$HOME`; they skip when `stow` is not installed.
 
 | Script                         | Tests Cover                                                          |
 |--------------------------------|----------------------------------------------------------------------|
-| `stow-packages.sh`            | Arg parsing, mode setting, PACKAGE arrays for all 4 modes, privilege detection |
-| `linux-apt-package-install.sh` | Arg parsing, mode setting, all 7 file-scope arrays, package assembly for all 4 modes, privilege detection |
-| `osx-package-install.sh`       | Arg parsing (incl. iot early exit), mode setting, file-scope arrays, formulae/cask assembly for server and workstation |
-| `bootstrap.sh`                 | Arg parsing, mode setting, OS detection with mocked OSTYPE           |
+| `stow-packages.sh`            | Arg parsing, mode setting, PACKAGE arrays for all 4 modes, privilege detection, and the dependency preflight and unloadable-stow-list paths both returning 2 |
+| `linux-apt-package-install.sh` | Arg parsing, mode setting, all 7 file-scope arrays, package assembly for all 4 modes, privilege detection, and the dependency preflight, unloadable package list, and failed platform check all returning 2 rather than 0 or 3 |
+| `osx-package-install.sh`       | Arg parsing (incl. iot early exit), mode setting, file-scope arrays, formulae/cask assembly for server and workstation, and the dependency preflight, unloadable formula list, and failed platform check all returning 2 rather than 0 or 3 |
+| `bootstrap.sh`                 | Arg parsing, mode setting, OS detection with mocked OSTYPE, and the Python dependency preflight aborting `--help`/`--list`/a real set alike |
+| `tools/discover_sets.sh`       | Set discovery and validation against the real config, `is_valid_set` matching, `check_set_platform` per set and platform, and the failure paths: `require_python_deps` on a missing module or missing interpreter, a loader that exits non-zero being reported as a loader fault rather than an empty config, and `load_config_array` distinguishing a legitimately empty list from one that was never assigned |
 | `tools/stow_conflicts.sh`      | Parsing each of stow's conflict messages, mapping a target back to its `dot-` prefixed repo file, diff summaries (line counts, identical files, directories, symlinks, truncation), the prompt's answers and re-prompting, and end-to-end backup/skip/quit against a real `stow` in a sandbox |
 | `nushell` package              | Stow layout, env.nu/config.nu content, live `nu` parse, and real vendor-autoload generation against a throwaway `$nu.data-dir` |
 
